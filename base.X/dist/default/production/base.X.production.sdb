@@ -1,0 +1,93 @@
+[p LITE_MODE AUTOSTATIC PIC14 PICREGULAR PICMID ]
+[d version 1.1 ]
+[d edition pro ]
+[d chip 16F887 ]
+[d frameptr 6 ]
+"54 D:\SyncFolders\MEGA\RHIT\ECE230\Final Project\Omnipotence\base.X\base_main.c
+[v _main main `(v  1 e 1 0 ]
+"99
+[v _interrupt_handler interrupt_handler `II(v  1 e 1 0 ]
+"62 C:\Program Files (x86)\Microchip\xc8\v1.37\sources\common\float.c
+[v ___ftpack __ftpack `(f  1 e 3 0 ]
+"86 C:\Program Files (x86)\Microchip\xc8\v1.37\sources\common\ftadd.c
+[v ___ftadd __ftadd `(f  1 e 3 0 ]
+"6 C:\Program Files (x86)\Microchip\xc8\v1.37\sources\pic\eeprom.c
+[v _eecpymem eecpymem `(v  1 e 1 0 ]
+"39
+[v _memcpyee memcpyee `(v  1 e 1 0 ]
+"42 D:\SyncFolders\MEGA\RHIT\ECE230\Final Project\Omnipotence\base.X\base_main.c
+[v _RC_DATA RC_DATA `uc  1 e 1 0 ]
+"44
+[v _last_CCP1_time last_CCP1_time `ui  1 e 2 0 ]
+"45
+[v _RC_session_activated RC_session_activated `b  1 e 0 0 ]
+"46
+[v _RC_session_start_received RC_session_start_received `b  1 e 0 0 ]
+"47
+[v _RC_session_data_received RC_session_data_received `b  1 e 0 0 ]
+"48
+[v _data_bit_counter data_bit_counter `uc  1 e 1 0 ]
+"49
+[v _data data `[32]uc  1 e 32 0 ]
+"160 C:\Program Files (x86)\Microchip\xc8\v1.37\include\pic16f887.h
+[v _PORTA PORTA `VEuc  1 e 1 @5 ]
+"635
+[v _TMR1 TMR1 `VEus  1 e 2 @14 ]
+"897
+[v _CCPR1 CCPR1 `VEus  1 e 2 @21 ]
+"1379
+[v _TRISA TRISA `VEuc  1 e 1 @133 ]
+"3314
+[v _ANSEL ANSEL `VEuc  1 e 1 @392 ]
+"3375
+[v _ANSELH ANSELH `VEuc  1 e 1 @393 ]
+"3622
+[v _CCP1IE CCP1IE `VEb  1 e 0 @1122 ]
+"3624
+[v _CCP1IF CCP1IF `VEb  1 e 0 @98 ]
+"3626
+[v _CCP1M0 CCP1M0 `VEb  1 e 0 @184 ]
+"3628
+[v _CCP1M1 CCP1M1 `VEb  1 e 0 @185 ]
+"3630
+[v _CCP1M2 CCP1M2 `VEb  1 e 0 @186 ]
+"3632
+[v _CCP1M3 CCP1M3 `VEb  1 e 0 @187 ]
+"3706
+[v _GIE GIE `VEb  1 e 0 @95 ]
+"3802
+[v _PEIE PEIE `VEb  1 e 0 @94 ]
+"3994
+[v _T1CKPS0 T1CKPS0 `VEb  1 e 0 @132 ]
+"3996
+[v _T1CKPS1 T1CKPS1 `VEb  1 e 0 @133 ]
+"4018
+[v _TMR1CS TMR1CS `VEb  1 e 0 @129 ]
+"4020
+[v _TMR1GE TMR1GE `VEb  1 e 0 @134 ]
+"4026
+[v _TMR1ON TMR1ON `VEb  1 e 0 @128 ]
+"4076
+[v _TRISC1 TRISC1 `VEb  1 e 0 @1081 ]
+"54 D:\SyncFolders\MEGA\RHIT\ECE230\Final Project\Omnipotence\base.X\base_main.c
+[v _main main `(v  1 e 1 0 ]
+{
+"83
+[v main@temp_last_CCP1_time temp_last_CCP1_time `ui  1 a 2 6 ]
+"82
+[v main@temp_TMR1 temp_TMR1 `ui  1 a 2 4 ]
+"97
+} 0
+"99
+[v _interrupt_handler interrupt_handler `II(v  1 e 1 0 ]
+{
+"108
+[v interrupt_handler@j j `uc  1 a 1 8 ]
+"114
+[v interrupt_handler@i_56 i `uc  1 a 1 10 ]
+"103
+[v interrupt_handler@temp temp `ui  1 a 2 11 ]
+"111
+[v interrupt_handler@i i `uc  1 a 1 9 ]
+"158
+} 0
