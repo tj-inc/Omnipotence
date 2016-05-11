@@ -2107,20 +2107,20 @@ extern __bit __timeout;
 
 
 enum Buttons {BUTTON_STOP = 0b00000000, BUTTON_OK = 0b00000010, BUTTON_ZERO = 0b01001010, BUTTON_UP = 0b01100010, BUTTON_DOWN = 0b10101000, BUTTON_LEFT = 0b00100010, BUTTON_RIGHT = 0b01001010};
+enum RC_States {RC_RESET, RC_START_FALL, RC_START_RISE, RC_RECV_FALL, RC_RECV_RISE, RC_CONT_FALL1, RC_CONT_RISE1, RC_CONT_FALL2, RC_CONT_RISE2};
 
-# 38
+# 44
 void interrupt interrupt_handler(void);
 
 
 
-char RC_DATA = 0;
-char rc_data_index = 0;
-unsigned int last_CCP1_time;
-bit RC_session_activated = 0;
-bit RC_session_start_received = 0;
-bit RC_session_data_received = 0;
-char data_bit_counter = 0;
-char data[32];
+char RC_State = 0;
+char RC_index = 0;
+char RC_data[33];
+unsigned int last_RC_time;
+unsigned int last_critical_RC_time;
+bit last_RC_data;
+bit RC_data_ready = 0;
 
 
 bit mode = 0;
@@ -2132,85 +2132,144 @@ ANSEL = 0;
 ANSELH = 0;
 
 
+TRISB2 = 1;
+ANS8 = 0;
+nRBPU = 0;
+IOCB2 = 1;
+last_RC_data = RB2;
+RBIF = 0;
+RBIE = 1;
+
+
 TMR1GE = 0; TMR1ON = 1;
 TMR1CS = 0;
-T1CKPS1 = 1; T1CKPS0 = 0;
+T1CKPS1 = 1; T1CKPS0 = 1;
 
-# 74
-TRISC1 = 0;
-CCP1M3 = 0; CCP1M2 = 1; CCP1M1 = 0; CCP1M0 = 0;
-CCP1IE = 1;
-CCP1IF = 0;
-last_CCP1_time = TMR1;
-PEIE = 1;
+# 86
+last_RC_time = TMR1;
+
 GIE = 1;
 
-unsigned int temp_TMR1;
-unsigned int temp_last_CCP1_time;
+unsigned int last_critical_difference;
+unsigned int last_RC_time_backup;
 
 while (1) {
-temp_last_CCP1_time = last_CCP1_time;
-temp_TMR1 = TMR1;
-if ((temp_TMR1 > temp_last_CCP1_time) & (temp_TMR1-temp_last_CCP1_time > 55000)) {
-RC_DATA = 0;
-RC_session_activated = 0;
-RC_session_start_received = 0;
-RC_session_data_received = 0;
-data_bit_counter = 0;
+
+# 108
+if (((signed int) (TMR1 - last_RC_time)) > 27500) {
+RC_State = RC_RESET;
+RC_index = 0;
+RC_data_ready = 0;
+} else {
+
+switch (RC_State) {
+case RC_RESET:
+if (last_RC_data == 0) {
+last_critical_RC_time = last_RC_time;
+RC_State = RC_START_FALL;
 }
-PORTA = RC_DATA;
+break;
+case RC_START_FALL:
+if (last_RC_data == 1) {
+last_RC_time_backup = last_RC_time;
+last_critical_difference = last_RC_time_backup - last_critical_RC_time;
+if (last_critical_difference > 2200) {
+last_critical_RC_time = last_RC_time_backup;
+RC_State = RC_START_RISE;
+} else {
+RC_State = RC_RESET;
+}
+}
+break;
+case RC_START_RISE:
+if (last_RC_data == 0) {
+last_RC_time_backup = last_RC_time;
+last_critical_difference = last_RC_time_backup - last_critical_RC_time;
+if (last_critical_difference > 1000) {
+last_critical_RC_time = last_RC_time_backup;
+RC_State = RC_RECV_FALL;
+} else {
+RC_State = RC_RESET;
+}
+}
+break;
+case RC_RECV_FALL:
+if (last_RC_data == 1) {
+RC_State = RC_RECV_RISE;
+}
+break;
+case RC_RECV_RISE:
+if (last_RC_data == 0) {
+last_RC_time_backup = last_RC_time;
+if (RC_index == 32) {
+RC_State = RC_CONT_FALL1;
+if (last_critical_difference < 375) {
+RC_data[RC_index] = 0;
+} else {
+RC_data[RC_index] = 1;
+}
+RC_data_ready = 1;
+} else {
+last_critical_difference = last_RC_time_backup - last_critical_RC_time;
+if (last_critical_difference < 375) {
+RC_data[RC_index] = 0;
+} else {
+RC_data[RC_index] = 1;
+}
+last_critical_RC_time = last_RC_time_backup;
+RC_index++;
+RC_State = RC_RECV_FALL;
+RC_data_ready = 0;
+}
+}
+break;
+case RC_CONT_FALL1:
+if (last_RC_data == 1) {
+last_RC_time_backup = last_RC_time;
+last_critical_difference = last_RC_time_backup - last_critical_RC_time;
+if (last_critical_difference > 2200) {
+last_critical_RC_time = last_RC_time_backup;
+RC_State = RC_CONT_RISE1;
+} else {
+RC_State = RC_CONT_RISE2;
+}
+}
+break;
+case RC_CONT_RISE1:
+if (last_RC_data == 0) {
+last_RC_time_backup = last_RC_time;
+last_critical_difference = last_RC_time_backup - last_critical_RC_time;
+if (last_critical_difference > 1000) {
+
+last_critical_RC_time = last_RC_time_backup;
+RC_State = RC_RECV_FALL;
+RC_index = 0;
+} else if (last_critical_difference > 500) {
+
+last_critical_RC_time = last_RC_time_backup;
+RC_State = RC_CONT_FALL2;
+}
+}
+break;
+case RC_CONT_FALL2:
+if (last_RC_data == 1) {
+RC_State = RC_CONT_RISE2;
+}
+break;
+case RC_CONT_RISE2:
+if (last_RC_data == 0) {
+last_critical_RC_time = last_RC_time;
+RC_State = RC_CONT_FALL1;
+}
+}
+}
 }
 }
 
 void interrupt interrupt_handler() {
-if (CCP1IF == 1) {
-if (RC_session_activated == 0) {
-if (RC_session_start_received == 1) {
-unsigned int temp = CCPR1-last_CCP1_time;
-if (temp > 6000) {
-RC_session_activated = 1;
-data_bit_counter = 1;
-} else {
-char j = 0;
-}
-RC_session_start_received = 0;
-char i = 0;
-} else {
-RC_session_start_received = 1;
-char i = 0;
-}
-} else {
-if (RC_session_data_received == 0) {
-data_bit_counter++;
-if (data_bit_counter <= 33) {
-if (CCPR1-last_CCP1_time > 600) {
-data[data_bit_counter-2] = 1;
-} else {
-data[data_bit_counter-2] = 0;
-}
-} else {
-RC_session_data_received = 1;
-RC_session_start_received = 1;
-}
-
-# 139
-} else {
-if (RC_session_start_received == 0) {
-RC_session_start_received = 1;
-} else {
-if (CCPR1 - last_CCP1_time > 6000) {
-RC_session_activated = 1;
-RC_session_start_received = 0;
-RC_session_data_received = 0;
-data_bit_counter = 1;
-RC_DATA = 0;
-} else if (CCPR1 - last_CCP1_time > 46500) {
-RC_session_start_received = 0;
-}
-}
-}
-}
-last_CCP1_time = CCPR1;
-CCP1IF = 0;
+if (RBIF == 1) {
+last_RC_time = TMR1;
+last_RC_data = RB2;
+RBIF = 0;
 }
 }

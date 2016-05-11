@@ -6,6 +6,20 @@ Version 3.2 HI-TECH Software Intermediate Code
 [v _ANSEL `Vuc ~T0 @X0 0 e@392 ]
 "3375
 [v _ANSELH `Vuc ~T0 @X0 0 e@393 ]
+"4062
+[v _TRISB2 `Vb ~T0 @X0 0 e@1074 ]
+"3528
+[v _ANS8 `Vb ~T0 @X0 0 e@3144 ]
+"4218
+[v _nRBPU `Vb ~T0 @X0 0 e@1039 ]
+"3734
+[v _IOCB2 `Vb ~T0 @X0 0 e@1202 ]
+"3848
+[v _RB2 `Vb ~T0 @X0 0 e@50 ]
+"3862
+[v _RBIF `Vb ~T0 @X0 0 e@88 ]
+"3860
+[v _RBIE `Vb ~T0 @X0 0 e@91 ]
 "4020
 [v _TMR1GE `Vb ~T0 @X0 0 e@134 ]
 "4026
@@ -16,30 +30,13 @@ Version 3.2 HI-TECH Software Intermediate Code
 [v _T1CKPS1 `Vb ~T0 @X0 0 e@133 ]
 "3994
 [v _T1CKPS0 `Vb ~T0 @X0 0 e@132 ]
-"4076
-[v _TRISC1 `Vb ~T0 @X0 0 e@1081 ]
-"3632
-[v _CCP1M3 `Vb ~T0 @X0 0 e@187 ]
-"3630
-[v _CCP1M2 `Vb ~T0 @X0 0 e@186 ]
-"3628
-[v _CCP1M1 `Vb ~T0 @X0 0 e@185 ]
-"3626
-[v _CCP1M0 `Vb ~T0 @X0 0 e@184 ]
-"3622
-[v _CCP1IE `Vb ~T0 @X0 0 e@1122 ]
-"3624
-[v _CCP1IF `Vb ~T0 @X0 0 e@98 ]
 "635
 [v _TMR1 `Vus ~T0 @X0 0 e@14 ]
-"3802
-[v _PEIE `Vb ~T0 @X0 0 e@94 ]
 "3706
 [v _GIE `Vb ~T0 @X0 0 e@95 ]
-"160
-[v _PORTA `Vuc ~T0 @X0 0 e@5 ]
-"897
-[v _CCPR1 `Vus ~T0 @X0 0 e@21 ]
+"109 base_main.c
+[c E1651 0 1 2 3 4 5 6 7 8 .. ]
+[n E1651 RC_States RC_RESET RC_START_FALL RC_START_RISE RC_RECV_FALL RC_RECV_RISE RC_CONT_FALL1 RC_CONT_RISE1 RC_CONT_FALL2 RC_CONT_RISE2  ]
 [; ;htc.h: 26: extern const char __xc8_OPTIM_SPEED;
 [; ;htc.h: 28: extern double __fpnormalize(double);
 [; ;xc8debug.h: 14: extern void __builtin_software_breakpoint(void);
@@ -1550,358 +1547,531 @@ Version 3.2 HI-TECH Software Intermediate Code
 "28
 [p x WRT=OFF ]
 [; ;base_main.c: 31: enum Buttons {BUTTON_STOP = 0b00000000, BUTTON_OK = 0b00000010, BUTTON_ZERO = 0b01001010, BUTTON_UP = 0b01100010, BUTTON_DOWN = 0b10101000, BUTTON_LEFT = 0b00100010, BUTTON_RIGHT = 0b01001010};
-[; ;base_main.c: 38: void interrupt interrupt_handler(void);
-"42
-[v _RC_DATA `uc ~T0 @X0 1 e ]
-[i _RC_DATA
--> -> 0 `i `uc
-]
-[; ;base_main.c: 42: char RC_DATA = 0;
-"43
-[v _rc_data_index `uc ~T0 @X0 1 e ]
-[i _rc_data_index
--> -> 0 `i `uc
-]
-[; ;base_main.c: 43: char rc_data_index = 0;
-"44
-[v _last_CCP1_time `ui ~T0 @X0 1 e ]
-[; ;base_main.c: 44: unsigned int last_CCP1_time;
-"45
-[v _RC_session_activated `b ~T0 @X0 1 e ]
-[i _RC_session_activated
--> 0 `i
-]
-[; ;base_main.c: 45: bit RC_session_activated = 0;
-"46
-[v _RC_session_start_received `b ~T0 @X0 1 e ]
-[i _RC_session_start_received
--> 0 `i
-]
-[; ;base_main.c: 46: bit RC_session_start_received = 0;
-"47
-[v _RC_session_data_received `b ~T0 @X0 1 e ]
-[i _RC_session_data_received
--> 0 `i
-]
-[; ;base_main.c: 47: bit RC_session_data_received = 0;
+[; ;base_main.c: 32: enum RC_States {RC_RESET, RC_START_FALL, RC_START_RISE, RC_RECV_FALL, RC_RECV_RISE, RC_CONT_FALL1, RC_CONT_RISE1, RC_CONT_FALL2, RC_CONT_RISE2};
+[; ;base_main.c: 44: void interrupt interrupt_handler(void);
 "48
-[v _data_bit_counter `uc ~T0 @X0 1 e ]
-[i _data_bit_counter
+[v _RC_State `uc ~T0 @X0 1 e ]
+[i _RC_State
 -> -> 0 `i `uc
 ]
-[; ;base_main.c: 48: char data_bit_counter = 0;
+[; ;base_main.c: 48: char RC_State = 0;
 "49
-[v _data `uc ~T0 @X0 -> 32 `i e ]
-[; ;base_main.c: 49: char data[32];
+[v _RC_index `uc ~T0 @X0 1 e ]
+[i _RC_index
+-> -> 0 `i `uc
+]
+[; ;base_main.c: 49: char RC_index = 0;
+"50
+[v _RC_data `uc ~T0 @X0 -> 33 `i e ]
+[; ;base_main.c: 50: char RC_data[33];
+"51
+[v _last_RC_time `ui ~T0 @X0 1 e ]
+[; ;base_main.c: 51: unsigned int last_RC_time;
 "52
+[v _last_critical_RC_time `ui ~T0 @X0 1 e ]
+[; ;base_main.c: 52: unsigned int last_critical_RC_time;
+"53
+[v _last_RC_data `b ~T0 @X0 1 e ]
+[; ;base_main.c: 53: bit last_RC_data;
+"54
+[v _RC_data_ready `b ~T0 @X0 1 e ]
+[i _RC_data_ready
+-> 0 `i
+]
+[; ;base_main.c: 54: bit RC_data_ready = 0;
+"57
 [v _mode `b ~T0 @X0 1 e ]
 [i _mode
 -> 0 `i
 ]
-[; ;base_main.c: 52: bit mode = 0;
-"54
+[; ;base_main.c: 57: bit mode = 0;
+"59
 [v _main `(v ~T0 @X0 1 ef ]
 {
-[; ;base_main.c: 54: void main(void) {
+[; ;base_main.c: 59: void main(void) {
 [e :U _main ]
 [f ]
-[; ;base_main.c: 56: TRISA = 0;
-"56
-[e = _TRISA -> -> 0 `i `uc ]
-[; ;base_main.c: 57: ANSEL = 0;
-"57
-[e = _ANSEL -> -> 0 `i `uc ]
-[; ;base_main.c: 58: ANSELH = 0;
-"58
-[e = _ANSELH -> -> 0 `i `uc ]
-[; ;base_main.c: 61: TMR1GE = 0; TMR1ON = 1;
+[; ;base_main.c: 61: TRISA = 0;
 "61
+[e = _TRISA -> -> 0 `i `uc ]
+[; ;base_main.c: 62: ANSEL = 0;
+"62
+[e = _ANSEL -> -> 0 `i `uc ]
+[; ;base_main.c: 63: ANSELH = 0;
+"63
+[e = _ANSELH -> -> 0 `i `uc ]
+[; ;base_main.c: 66: TRISB2 = 1;
+"66
+[e = _TRISB2 -> -> 1 `i `b ]
+[; ;base_main.c: 67: ANS8 = 0;
+"67
+[e = _ANS8 -> -> 0 `i `b ]
+[; ;base_main.c: 68: nRBPU = 0;
+"68
+[e = _nRBPU -> -> 0 `i `b ]
+[; ;base_main.c: 69: IOCB2 = 1;
+"69
+[e = _IOCB2 -> -> 1 `i `b ]
+[; ;base_main.c: 70: last_RC_data = RB2;
+"70
+[e = _last_RC_data _RB2 ]
+[; ;base_main.c: 71: RBIF = 0;
+"71
+[e = _RBIF -> -> 0 `i `b ]
+[; ;base_main.c: 72: RBIE = 1;
+"72
+[e = _RBIE -> -> 1 `i `b ]
+[; ;base_main.c: 75: TMR1GE = 0; TMR1ON = 1;
+"75
 [e = _TMR1GE -> -> 0 `i `b ]
 [e = _TMR1ON -> -> 1 `i `b ]
-[; ;base_main.c: 62: TMR1CS = 0;
-"62
-[e = _TMR1CS -> -> 0 `i `b ]
-[; ;base_main.c: 63: T1CKPS1 = 1; T1CKPS0 = 0;
-"63
-[e = _T1CKPS1 -> -> 1 `i `b ]
-[e = _T1CKPS0 -> -> 0 `i `b ]
-[; ;base_main.c: 74: TRISC1 = 0;
-"74
-[e = _TRISC1 -> -> 0 `i `b ]
-[; ;base_main.c: 75: CCP1M3 = 0; CCP1M2 = 1; CCP1M1 = 0; CCP1M0 = 0;
-"75
-[e = _CCP1M3 -> -> 0 `i `b ]
-[e = _CCP1M2 -> -> 1 `i `b ]
-[e = _CCP1M1 -> -> 0 `i `b ]
-[e = _CCP1M0 -> -> 0 `i `b ]
-[; ;base_main.c: 76: CCP1IE = 1;
+[; ;base_main.c: 76: TMR1CS = 0;
 "76
-[e = _CCP1IE -> -> 1 `i `b ]
-[; ;base_main.c: 77: CCP1IF = 0;
+[e = _TMR1CS -> -> 0 `i `b ]
+[; ;base_main.c: 77: T1CKPS1 = 1; T1CKPS0 = 1;
 "77
-[e = _CCP1IF -> -> 0 `i `b ]
-[; ;base_main.c: 78: last_CCP1_time = TMR1;
-"78
-[e = _last_CCP1_time -> _TMR1 `ui ]
-[; ;base_main.c: 79: PEIE = 1;
-"79
-[e = _PEIE -> -> 1 `i `b ]
-[; ;base_main.c: 80: GIE = 1;
-"80
+[e = _T1CKPS1 -> -> 1 `i `b ]
+[e = _T1CKPS0 -> -> 1 `i `b ]
+[; ;base_main.c: 86: last_RC_time = TMR1;
+"86
+[e = _last_RC_time -> _TMR1 `ui ]
+[; ;base_main.c: 88: GIE = 1;
+"88
 [e = _GIE -> -> 1 `i `b ]
-"82
-[v _temp_TMR1 `ui ~T0 @X0 1 a ]
-"83
-[v _temp_last_CCP1_time `ui ~T0 @X0 1 a ]
-[; ;base_main.c: 82: unsigned int temp_TMR1;
-[; ;base_main.c: 83: unsigned int temp_last_CCP1_time;
-[; ;base_main.c: 85: while (1) {
-"85
+"90
+[v _last_critical_difference `ui ~T0 @X0 1 a ]
+"91
+[v _last_RC_time_backup `ui ~T0 @X0 1 a ]
+[; ;base_main.c: 90: unsigned int last_critical_difference;
+[; ;base_main.c: 91: unsigned int last_RC_time_backup;
+[; ;base_main.c: 93: while (1) {
+"93
 [e :U 141 ]
 {
-[; ;base_main.c: 86: temp_last_CCP1_time = last_CCP1_time;
-"86
-[e = _temp_last_CCP1_time _last_CCP1_time ]
-[; ;base_main.c: 87: temp_TMR1 = TMR1;
-"87
-[e = _temp_TMR1 -> _TMR1 `ui ]
-[; ;base_main.c: 88: if ((temp_TMR1 > temp_last_CCP1_time) & (temp_TMR1-temp_last_CCP1_time > 55000)) {
-"88
-[e $ ! & > _temp_TMR1 _temp_last_CCP1_time > -> - _temp_TMR1 _temp_last_CCP1_time `l -> 55000 `l 143  ]
-{
-[; ;base_main.c: 89: RC_DATA = 0;
-"89
-[e = _RC_DATA -> -> 0 `i `uc ]
-[; ;base_main.c: 90: RC_session_activated = 0;
-"90
-[e = _RC_session_activated -> -> 0 `i `b ]
-[; ;base_main.c: 91: RC_session_start_received = 0;
-"91
-[e = _RC_session_start_received -> -> 0 `i `b ]
-[; ;base_main.c: 92: RC_session_data_received = 0;
-"92
-[e = _RC_session_data_received -> -> 0 `i `b ]
-[; ;base_main.c: 93: data_bit_counter = 0;
-"93
-[e = _data_bit_counter -> -> 0 `i `uc ]
-"94
-}
-[e :U 143 ]
-[; ;base_main.c: 94: }
-[; ;base_main.c: 95: PORTA = RC_DATA;
-"95
-[e = _PORTA _RC_DATA ]
-"96
-}
-[e :U 140 ]
-"85
-[e $U 141  ]
-[e :U 142 ]
-[; ;base_main.c: 96: }
-[; ;base_main.c: 97: }
-"97
-[e :UE 139 ]
-}
-[v F1653 `(v ~T0 @X0 1 tf ]
-"99
-[v _interrupt_handler `IF1653 ~T0 @X0 1 e ]
-{
-[; ;base_main.c: 99: void interrupt interrupt_handler() {
-[e :U _interrupt_handler ]
-[f ]
-[; ;base_main.c: 100: if (CCP1IF == 1) {
-"100
-[e $ ! == -> _CCP1IF `i -> 1 `i 145  ]
-{
-[; ;base_main.c: 101: if (RC_session_activated == 0) {
-"101
-[e $ ! == -> _RC_session_activated `i -> 0 `i 146  ]
-{
-[; ;base_main.c: 102: if (RC_session_start_received == 1) {
-"102
-[e $ ! == -> _RC_session_start_received `i -> 1 `i 147  ]
-{
-"103
-[v _temp `ui ~T0 @X0 1 a ]
-[; ;base_main.c: 103: unsigned int temp = CCPR1-last_CCP1_time;
-[e = _temp - -> _CCPR1 `ui _last_CCP1_time ]
-[; ;base_main.c: 104: if (temp > 6000) {
-"104
-[e $ ! > _temp -> -> 6000 `i `ui 148  ]
-{
-[; ;base_main.c: 105: RC_session_activated = 1;
-"105
-[e = _RC_session_activated -> -> 1 `i `b ]
-[; ;base_main.c: 106: data_bit_counter = 1;
-"106
-[e = _data_bit_counter -> -> 1 `i `uc ]
-"107
-}
-[; ;base_main.c: 107: } else {
-[e $U 149  ]
-[e :U 148 ]
-{
+[; ;base_main.c: 108: if (((signed int) (TMR1 - last_RC_time)) > 27500) {
 "108
-[v _j `uc ~T0 @X0 1 a ]
-[; ;base_main.c: 108: char j = 0;
-[e = _j -> -> 0 `i `uc ]
+[e $ ! > -> - -> _TMR1 `ui _last_RC_time `i -> 27500 `i 143  ]
+{
+[; ;base_main.c: 109: RC_State = RC_RESET;
 "109
-}
-[e :U 149 ]
-[; ;base_main.c: 109: }
-[; ;base_main.c: 110: RC_session_start_received = 0;
+[e = _RC_State -> . `E1651 0 `uc ]
+[; ;base_main.c: 110: RC_index = 0;
 "110
-[e = _RC_session_start_received -> -> 0 `i `b ]
+[e = _RC_index -> -> 0 `i `uc ]
+[; ;base_main.c: 111: RC_data_ready = 0;
 "111
-[v _i `uc ~T0 @X0 1 a ]
-[; ;base_main.c: 111: char i = 0;
-[e = _i -> -> 0 `i `uc ]
+[e = _RC_data_ready -> -> 0 `i `b ]
 "112
 }
 [; ;base_main.c: 112: } else {
-[e $U 150  ]
-[e :U 147 ]
+[e $U 144  ]
+[e :U 143 ]
 {
-[; ;base_main.c: 113: RC_session_start_received = 1;
-"113
-[e = _RC_session_start_received -> -> 1 `i `b ]
+[; ;base_main.c: 114: switch (RC_State) {
 "114
-[v _i `uc ~T0 @X0 1 a ]
-[; ;base_main.c: 114: char i = 0;
-[e = _i -> -> 0 `i `uc ]
+[e $U 146  ]
+{
+[; ;base_main.c: 115: case RC_RESET:
 "115
-}
-[e :U 150 ]
+[e :U 147 ]
+[; ;base_main.c: 116: if (last_RC_data == 0) {
 "116
-}
-[; ;base_main.c: 115: }
-[; ;base_main.c: 116: } else {
-[e $U 151  ]
-[e :U 146 ]
+[e $ ! == -> _last_RC_data `i -> 0 `i 148  ]
 {
-[; ;base_main.c: 117: if (RC_session_data_received == 0) {
+[; ;base_main.c: 117: last_critical_RC_time = last_RC_time;
 "117
-[e $ ! == -> _RC_session_data_received `i -> 0 `i 152  ]
-{
-[; ;base_main.c: 118: data_bit_counter++;
+[e = _last_critical_RC_time _last_RC_time ]
+[; ;base_main.c: 118: RC_State = RC_START_FALL;
 "118
-[e ++ _data_bit_counter -> -> 1 `i `uc ]
-[; ;base_main.c: 119: if (data_bit_counter <= 33) {
+[e = _RC_State -> . `E1651 1 `uc ]
 "119
-[e $ ! <= -> _data_bit_counter `i -> 33 `i 153  ]
-{
-[; ;base_main.c: 120: if (CCPR1-last_CCP1_time > 600) {
+}
+[e :U 148 ]
+[; ;base_main.c: 119: }
+[; ;base_main.c: 120: break;
 "120
-[e $ ! > - -> _CCPR1 `ui _last_CCP1_time -> -> 600 `i `ui 154  ]
-{
-[; ;base_main.c: 121: data[data_bit_counter-2] = 1;
+[e $U 145  ]
+[; ;base_main.c: 121: case RC_START_FALL:
 "121
-[e = *U + &U _data * -> -> - -> _data_bit_counter `i -> 2 `i `ui `ux -> -> # *U &U _data `ui `ux -> -> 1 `i `uc ]
+[e :U 149 ]
+[; ;base_main.c: 122: if (last_RC_data == 1) {
 "122
-}
-[; ;base_main.c: 122: } else {
-[e $U 155  ]
-[e :U 154 ]
+[e $ ! == -> _last_RC_data `i -> 1 `i 150  ]
 {
-[; ;base_main.c: 123: data[data_bit_counter-2] = 0;
+[; ;base_main.c: 123: last_RC_time_backup = last_RC_time;
 "123
-[e = *U + &U _data * -> -> - -> _data_bit_counter `i -> 2 `i `ui `ux -> -> # *U &U _data `ui `ux -> -> 0 `i `uc ]
+[e = _last_RC_time_backup _last_RC_time ]
+[; ;base_main.c: 124: last_critical_difference = last_RC_time_backup - last_critical_RC_time;
 "124
-}
-[e :U 155 ]
+[e = _last_critical_difference - _last_RC_time_backup _last_critical_RC_time ]
+[; ;base_main.c: 125: if (last_critical_difference > 2200) {
 "125
-}
-[; ;base_main.c: 124: }
-[; ;base_main.c: 125: } else {
-[e $U 156  ]
-[e :U 153 ]
+[e $ ! > _last_critical_difference -> -> 2200 `i `ui 151  ]
 {
-[; ;base_main.c: 126: RC_session_data_received = 1;
+[; ;base_main.c: 126: last_critical_RC_time = last_RC_time_backup;
 "126
-[e = _RC_session_data_received -> -> 1 `i `b ]
-[; ;base_main.c: 127: RC_session_start_received = 1;
+[e = _last_critical_RC_time _last_RC_time_backup ]
+[; ;base_main.c: 127: RC_State = RC_START_RISE;
 "127
-[e = _RC_session_start_received -> -> 1 `i `b ]
+[e = _RC_State -> . `E1651 2 `uc ]
 "128
 }
-[e :U 156 ]
-"139
+[; ;base_main.c: 128: } else {
+[e $U 152  ]
+[e :U 151 ]
+{
+[; ;base_main.c: 129: RC_State = RC_RESET;
+"129
+[e = _RC_State -> . `E1651 0 `uc ]
+"130
 }
-[; ;base_main.c: 128: }
-[; ;base_main.c: 139: } else {
-[e $U 157  ]
 [e :U 152 ]
+"131
+}
+[e :U 150 ]
+[; ;base_main.c: 130: }
+[; ;base_main.c: 131: }
+[; ;base_main.c: 132: break;
+"132
+[e $U 145  ]
+[; ;base_main.c: 133: case RC_START_RISE:
+"133
+[e :U 153 ]
+[; ;base_main.c: 134: if (last_RC_data == 0) {
+"134
+[e $ ! == -> _last_RC_data `i -> 0 `i 154  ]
 {
-[; ;base_main.c: 140: if (RC_session_start_received == 0) {
+[; ;base_main.c: 135: last_RC_time_backup = last_RC_time;
+"135
+[e = _last_RC_time_backup _last_RC_time ]
+[; ;base_main.c: 136: last_critical_difference = last_RC_time_backup - last_critical_RC_time;
+"136
+[e = _last_critical_difference - _last_RC_time_backup _last_critical_RC_time ]
+[; ;base_main.c: 137: if (last_critical_difference > 1000) {
+"137
+[e $ ! > _last_critical_difference -> -> 1000 `i `ui 155  ]
+{
+[; ;base_main.c: 138: last_critical_RC_time = last_RC_time_backup;
+"138
+[e = _last_critical_RC_time _last_RC_time_backup ]
+[; ;base_main.c: 139: RC_State = RC_RECV_FALL;
+"139
+[e = _RC_State -> . `E1651 3 `uc ]
 "140
-[e $ ! == -> _RC_session_start_received `i -> 0 `i 158  ]
+}
+[; ;base_main.c: 140: } else {
+[e $U 156  ]
+[e :U 155 ]
 {
-[; ;base_main.c: 141: RC_session_start_received = 1;
+[; ;base_main.c: 141: RC_State = RC_RESET;
 "141
-[e = _RC_session_start_received -> -> 1 `i `b ]
+[e = _RC_State -> . `E1651 0 `uc ]
 "142
 }
-[; ;base_main.c: 142: } else {
-[e $U 159  ]
-[e :U 158 ]
-{
-[; ;base_main.c: 143: if (CCPR1 - last_CCP1_time > 6000) {
+[e :U 156 ]
 "143
-[e $ ! > - -> _CCPR1 `ui _last_CCP1_time -> -> 6000 `i `ui 160  ]
-{
-[; ;base_main.c: 144: RC_session_activated = 1;
+}
+[e :U 154 ]
+[; ;base_main.c: 142: }
+[; ;base_main.c: 143: }
+[; ;base_main.c: 144: break;
 "144
-[e = _RC_session_activated -> -> 1 `i `b ]
-[; ;base_main.c: 145: RC_session_start_received = 0;
+[e $U 145  ]
+[; ;base_main.c: 145: case RC_RECV_FALL:
 "145
-[e = _RC_session_start_received -> -> 0 `i `b ]
-[; ;base_main.c: 146: RC_session_data_received = 0;
-"146
-[e = _RC_session_data_received -> -> 0 `i `b ]
-[; ;base_main.c: 147: data_bit_counter = 1;
-"147
-[e = _data_bit_counter -> -> 1 `i `uc ]
-[; ;base_main.c: 148: RC_DATA = 0;
-"148
-[e = _RC_DATA -> -> 0 `i `uc ]
-"149
-}
-[; ;base_main.c: 149: } else if (CCPR1 - last_CCP1_time > 46500) {
-[e $U 161  ]
-[e :U 160 ]
-[e $ ! > -> - -> _CCPR1 `ui _last_CCP1_time `l -> 46500 `l 162  ]
-{
-[; ;base_main.c: 150: RC_session_start_received = 0;
-"150
-[e = _RC_session_start_received -> -> 0 `i `b ]
-"151
-}
-[e :U 162 ]
-"152
-[e :U 161 ]
-}
-[e :U 159 ]
-"153
-}
 [e :U 157 ]
-"154
+[; ;base_main.c: 146: if (last_RC_data == 1) {
+"146
+[e $ ! == -> _last_RC_data `i -> 1 `i 158  ]
+{
+[; ;base_main.c: 147: RC_State = RC_RECV_RISE;
+"147
+[e = _RC_State -> . `E1651 4 `uc ]
+"148
 }
-[e :U 151 ]
-[; ;base_main.c: 151: }
-[; ;base_main.c: 152: }
-[; ;base_main.c: 153: }
-[; ;base_main.c: 154: }
-[; ;base_main.c: 155: last_CCP1_time = CCPR1;
+[e :U 158 ]
+[; ;base_main.c: 148: }
+[; ;base_main.c: 149: break;
+"149
+[e $U 145  ]
+[; ;base_main.c: 150: case RC_RECV_RISE:
+"150
+[e :U 159 ]
+[; ;base_main.c: 151: if (last_RC_data == 0) {
+"151
+[e $ ! == -> _last_RC_data `i -> 0 `i 160  ]
+{
+[; ;base_main.c: 152: last_RC_time_backup = last_RC_time;
+"152
+[e = _last_RC_time_backup _last_RC_time ]
+[; ;base_main.c: 153: if (RC_index == 32) {
+"153
+[e $ ! == -> _RC_index `i -> 32 `i 161  ]
+{
+[; ;base_main.c: 154: RC_State = RC_CONT_FALL1;
+"154
+[e = _RC_State -> . `E1651 5 `uc ]
+[; ;base_main.c: 155: if (last_critical_difference < 375) {
 "155
-[e = _last_CCP1_time -> _CCPR1 `ui ]
-[; ;base_main.c: 156: CCP1IF = 0;
+[e $ ! < _last_critical_difference -> -> 375 `i `ui 162  ]
+{
+[; ;base_main.c: 156: RC_data[RC_index] = 0;
 "156
-[e = _CCP1IF -> -> 0 `i `b ]
+[e = *U + &U _RC_data * -> _RC_index `ux -> -> # *U &U _RC_data `ui `ux -> -> 0 `i `uc ]
 "157
 }
-[e :U 145 ]
-[; ;base_main.c: 157: }
-[; ;base_main.c: 158: }
+[; ;base_main.c: 157: } else {
+[e $U 163  ]
+[e :U 162 ]
+{
+[; ;base_main.c: 158: RC_data[RC_index] = 1;
 "158
-[e :UE 144 ]
+[e = *U + &U _RC_data * -> _RC_index `ux -> -> # *U &U _RC_data `ui `ux -> -> 1 `i `uc ]
+"159
+}
+[e :U 163 ]
+[; ;base_main.c: 159: }
+[; ;base_main.c: 160: RC_data_ready = 1;
+"160
+[e = _RC_data_ready -> -> 1 `i `b ]
+"161
+}
+[; ;base_main.c: 161: } else {
+[e $U 164  ]
+[e :U 161 ]
+{
+[; ;base_main.c: 162: last_critical_difference = last_RC_time_backup - last_critical_RC_time;
+"162
+[e = _last_critical_difference - _last_RC_time_backup _last_critical_RC_time ]
+[; ;base_main.c: 163: if (last_critical_difference < 375) {
+"163
+[e $ ! < _last_critical_difference -> -> 375 `i `ui 165  ]
+{
+[; ;base_main.c: 164: RC_data[RC_index] = 0;
+"164
+[e = *U + &U _RC_data * -> _RC_index `ux -> -> # *U &U _RC_data `ui `ux -> -> 0 `i `uc ]
+"165
+}
+[; ;base_main.c: 165: } else {
+[e $U 166  ]
+[e :U 165 ]
+{
+[; ;base_main.c: 166: RC_data[RC_index] = 1;
+"166
+[e = *U + &U _RC_data * -> _RC_index `ux -> -> # *U &U _RC_data `ui `ux -> -> 1 `i `uc ]
+"167
+}
+[e :U 166 ]
+[; ;base_main.c: 167: }
+[; ;base_main.c: 168: last_critical_RC_time = last_RC_time_backup;
+"168
+[e = _last_critical_RC_time _last_RC_time_backup ]
+[; ;base_main.c: 169: RC_index++;
+"169
+[e ++ _RC_index -> -> 1 `i `uc ]
+[; ;base_main.c: 170: RC_State = RC_RECV_FALL;
+"170
+[e = _RC_State -> . `E1651 3 `uc ]
+[; ;base_main.c: 171: RC_data_ready = 0;
+"171
+[e = _RC_data_ready -> -> 0 `i `b ]
+"172
+}
+[e :U 164 ]
+"173
+}
+[e :U 160 ]
+[; ;base_main.c: 172: }
+[; ;base_main.c: 173: }
+[; ;base_main.c: 174: break;
+"174
+[e $U 145  ]
+[; ;base_main.c: 175: case RC_CONT_FALL1:
+"175
+[e :U 167 ]
+[; ;base_main.c: 176: if (last_RC_data == 1) {
+"176
+[e $ ! == -> _last_RC_data `i -> 1 `i 168  ]
+{
+[; ;base_main.c: 177: last_RC_time_backup = last_RC_time;
+"177
+[e = _last_RC_time_backup _last_RC_time ]
+[; ;base_main.c: 178: last_critical_difference = last_RC_time_backup - last_critical_RC_time;
+"178
+[e = _last_critical_difference - _last_RC_time_backup _last_critical_RC_time ]
+[; ;base_main.c: 179: if (last_critical_difference > 2200) {
+"179
+[e $ ! > _last_critical_difference -> -> 2200 `i `ui 169  ]
+{
+[; ;base_main.c: 180: last_critical_RC_time = last_RC_time_backup;
+"180
+[e = _last_critical_RC_time _last_RC_time_backup ]
+[; ;base_main.c: 181: RC_State = RC_CONT_RISE1;
+"181
+[e = _RC_State -> . `E1651 6 `uc ]
+"182
+}
+[; ;base_main.c: 182: } else {
+[e $U 170  ]
+[e :U 169 ]
+{
+[; ;base_main.c: 183: RC_State = RC_CONT_RISE2;
+"183
+[e = _RC_State -> . `E1651 8 `uc ]
+"184
+}
+[e :U 170 ]
+"185
+}
+[e :U 168 ]
+[; ;base_main.c: 184: }
+[; ;base_main.c: 185: }
+[; ;base_main.c: 186: break;
+"186
+[e $U 145  ]
+[; ;base_main.c: 187: case RC_CONT_RISE1:
+"187
+[e :U 171 ]
+[; ;base_main.c: 188: if (last_RC_data == 0) {
+"188
+[e $ ! == -> _last_RC_data `i -> 0 `i 172  ]
+{
+[; ;base_main.c: 189: last_RC_time_backup = last_RC_time;
+"189
+[e = _last_RC_time_backup _last_RC_time ]
+[; ;base_main.c: 190: last_critical_difference = last_RC_time_backup - last_critical_RC_time;
+"190
+[e = _last_critical_difference - _last_RC_time_backup _last_critical_RC_time ]
+[; ;base_main.c: 191: if (last_critical_difference > 1000) {
+"191
+[e $ ! > _last_critical_difference -> -> 1000 `i `ui 173  ]
+{
+[; ;base_main.c: 193: last_critical_RC_time = last_RC_time_backup;
+"193
+[e = _last_critical_RC_time _last_RC_time_backup ]
+[; ;base_main.c: 194: RC_State = RC_RECV_FALL;
+"194
+[e = _RC_State -> . `E1651 3 `uc ]
+[; ;base_main.c: 195: RC_index = 0;
+"195
+[e = _RC_index -> -> 0 `i `uc ]
+"196
+}
+[; ;base_main.c: 196: } else if (last_critical_difference > 500) {
+[e $U 174  ]
+[e :U 173 ]
+[e $ ! > _last_critical_difference -> -> 500 `i `ui 175  ]
+{
+[; ;base_main.c: 198: last_critical_RC_time = last_RC_time_backup;
+"198
+[e = _last_critical_RC_time _last_RC_time_backup ]
+[; ;base_main.c: 199: RC_State = RC_CONT_FALL2;
+"199
+[e = _RC_State -> . `E1651 7 `uc ]
+"200
+}
+[e :U 175 ]
+"201
+[e :U 174 ]
+}
+[e :U 172 ]
+[; ;base_main.c: 200: }
+[; ;base_main.c: 201: }
+[; ;base_main.c: 202: break;
+"202
+[e $U 145  ]
+[; ;base_main.c: 203: case RC_CONT_FALL2:
+"203
+[e :U 176 ]
+[; ;base_main.c: 204: if (last_RC_data == 1) {
+"204
+[e $ ! == -> _last_RC_data `i -> 1 `i 177  ]
+{
+[; ;base_main.c: 205: RC_State = RC_CONT_RISE2;
+"205
+[e = _RC_State -> . `E1651 8 `uc ]
+"206
+}
+[e :U 177 ]
+[; ;base_main.c: 206: }
+[; ;base_main.c: 207: break;
+"207
+[e $U 145  ]
+[; ;base_main.c: 208: case RC_CONT_RISE2:
+"208
+[e :U 178 ]
+[; ;base_main.c: 209: if (last_RC_data == 0) {
+"209
+[e $ ! == -> _last_RC_data `i -> 0 `i 179  ]
+{
+[; ;base_main.c: 210: last_critical_RC_time = last_RC_time;
+"210
+[e = _last_critical_RC_time _last_RC_time ]
+[; ;base_main.c: 211: RC_State = RC_CONT_FALL1;
+"211
+[e = _RC_State -> . `E1651 5 `uc ]
+"212
+}
+[e :U 179 ]
+"213
+}
+[; ;base_main.c: 212: }
+[; ;base_main.c: 213: }
+[e $U 145  ]
+"114
+[e :U 146 ]
+[e [\ _RC_State , $ -> . `E1651 0 `uc 147
+ , $ -> . `E1651 1 `uc 149
+ , $ -> . `E1651 2 `uc 153
+ , $ -> . `E1651 3 `uc 157
+ , $ -> . `E1651 4 `uc 159
+ , $ -> . `E1651 5 `uc 167
+ , $ -> . `E1651 6 `uc 171
+ , $ -> . `E1651 7 `uc 176
+ , $ -> . `E1651 8 `uc 178
+ 145 ]
+"213
+[e :U 145 ]
+"214
+}
+[e :U 144 ]
+"215
+}
+[e :U 140 ]
+"93
+[e $U 141  ]
+[e :U 142 ]
+[; ;base_main.c: 214: }
+[; ;base_main.c: 215: }
+[; ;base_main.c: 216: }
+"216
+[e :UE 139 ]
+}
+[v F1663 `(v ~T0 @X0 1 tf ]
+"218
+[v _interrupt_handler `IF1663 ~T0 @X0 1 e ]
+{
+[; ;base_main.c: 218: void interrupt interrupt_handler() {
+[e :U _interrupt_handler ]
+[f ]
+[; ;base_main.c: 219: if (RBIF == 1) {
+"219
+[e $ ! == -> _RBIF `i -> 1 `i 181  ]
+{
+[; ;base_main.c: 220: last_RC_time = TMR1;
+"220
+[e = _last_RC_time -> _TMR1 `ui ]
+[; ;base_main.c: 221: last_RC_data = RB2;
+"221
+[e = _last_RC_data _RB2 ]
+[; ;base_main.c: 222: RBIF = 0;
+"222
+[e = _RBIF -> -> 0 `i `b ]
+"223
+}
+[e :U 181 ]
+[; ;base_main.c: 223: }
+[; ;base_main.c: 224: }
+"224
+[e :UE 180 ]
 }

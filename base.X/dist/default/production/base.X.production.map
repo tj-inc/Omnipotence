@@ -5,7 +5,7 @@ Linker command line:
 -W-3 --edf=C:\Program Files (x86)\Microchip\xc8\v1.37\dat\en_msgs.txt -cs \
   -h+dist/default/production\base.X.production.sym \
   --cmf=dist/default/production\base.X.production.cmf -z -Q16F887 \
-  -oC:\Users\Joe\AppData\Local\Temp\sbmc.2 \
+  -oC:\Users\Joe\AppData\Local\Temp\s1lo.2 \
   -Mdist/default/production/base.X.production.map -E1 -ver=XC8 \
   -ASTACK=0110h-016fh -pstack=STACK -ACODE=00h-07FFhx4 -ASTRCODE=00h-01FFFh \
   -ASTRING=00h-0FFhx32 -ACONST=00h-0FFhx32 -AENTRY=00h-0FFhx32 \
@@ -18,7 +18,7 @@ Linker command line:
   -pfunctab=CODE -ACONFIG=02007h-02008h -pconfig=CONFIG -DCONFIG=2 \
   -AIDLOC=02000h-02003h -pidloc=IDLOC -DIDLOC=2 -AEEDATA=00h-0FFh/02100h \
   -peeprom_data=EEDATA -DEEDATA=2 -DCODE=2 -DSTRCODE=2 -DSTRING=2 -DCONST=2 \
-  -DENTRY=2 -k C:\Users\Joe\AppData\Local\Temp\sbmc.obj \
+  -DENTRY=2 -k C:\Users\Joe\AppData\Local\Temp\s1lo.obj \
   dist/default/production\base.X.production.obj 
 
 Object code version is 3.11
@@ -28,34 +28,34 @@ Machine type is 16F887
 
 
                 Name                               Link     Load   Length Selector   Space Scale
-C:\Users\Joe\AppData\Local\Temp\sbmc.obj
+C:\Users\Joe\AppData\Local\Temp\s1lo.obj
                 end_init                             12       12        3        8       0
                 reset_vec                             0        0        3        0       0
                 config                             2007     2007        2     400E       0
 dist/default/production\base.X.production.obj
-                cinit                                15       15        D        8       0
+                cinit                                15       15        C        8       0
                 intentry                              4        4        E        8       0
-                text1                                22       22       A3        8       0
-                maintext                             C5       C5       51        8       0
-                cstackBANK0                          43       43        8       20       1
-                cstackCOMMON                         70       70        D       70       1
-                clrtext                             116      116        8        8       0
-                bssBANK0                             20       20       23       20       1
-                bitbssBANK0                         268       4D        1       20       1     8
-                bitbssCOMMON                        3E8       7D        3       70       1     8
-                nvBANK0                              4B       4B        2       20       1
+                text1                               18E      18E       17        8       0
+                maintext                             21       21      16D        8       0
+                cstackBANK0                          45       45        4       20       1
+                cstackCOMMON                         70       70        8       70       1
+                clrtext                             1A5      1A5        8        8       0
+                bssBANK0                             20       20       25       20       1
+                bitbssCOMMON                        3C0       78        2       70       1     8
+                nvBANK0                              49       49        2       20       1
+                bitnvCOMMON                         3C8       79        1       70       1     8
 
 TOTAL           Name                               Link     Load   Length     Space
         CLASS   STACK          
 
         CLASS   CODE           
                 end_init                             12       12        3         0
-                cinit                                15       15        D         0
+                cinit                                15       15        C         0
                 intentry                              4        4        E         0
                 reset_vec                             0        0        3         0
-                text1                                22       22       A3         0
-                maintext                             C5       C5       51         0
-                clrtext                             116      116        8         0
+                text1                               18E      18E       17         0
+                maintext                             21       21      16D         0
+                clrtext                             1A5      1A5        8         0
 
         CLASS   STRCODE        
 
@@ -66,14 +66,14 @@ TOTAL           Name                               Link     Load   Length     Sp
         CLASS   ENTRY          
 
         CLASS   COMMON         
-                cstackCOMMON                         70       70        D         1
-                bitbssCOMMON                        3E8       7D        3         1
+                cstackCOMMON                         70       70        8         1
+                bitbssCOMMON                        3C0       78        2         1
+                bitnvCOMMON                         3C8       79        1         1
 
         CLASS   BANK0          
-                cstackBANK0                          43       43        8         1
-                bssBANK0                             20       20       23         1
-                bitbssBANK0                         268       4D        1         1
-                nvBANK0                              4B       4B        2         1
+                cstackBANK0                          45       45        4         1
+                bssBANK0                             20       20       25         1
+                nvBANK0                              49       49        2         1
 
         CLASS   BANK1          
 
@@ -106,28 +106,29 @@ TOTAL           Name                               Link     Load   Length     Sp
 SEGMENTS        Name                           Load    Length   Top    Selector   Space  Class     Delta
 
                 reset_vec                      000000  000003  000003         0       0  CODE        2
-                intentry                       000004  00011A  00011E         8       0  CODE        2
-                bssBANK0                       000020  00002E  00004E        20       1  BANK0       1
-                cstackCOMMON                   000070  00000E  00007E        70       1  COMMON      1
+                intentry                       000004  0001A9  0001AD         8       0  CODE        2
+                bssBANK0                       000020  00002B  00004B        20       1  BANK0       1
+                cstackCOMMON                   000070  00000A  00007A        70       1  COMMON      1
                 config                         002007  000002  002009      400E       0  CONFIG      2
 
 
 UNUSED ADDRESS RANGES
 
         Name                Unused          Largest block    Delta
-        BANK0            004E-006F             22           1
+        BANK0            004B-006F             25           1
         BANK1            00A0-00EF             50           1
         BANK2            0110-016F             60           1
         BANK3            0190-01EF             60           1
         CODE             0003-0003              1           2
-                         011E-1FFF            800
+                         01AD-1FFF            800
+        COMMON           007A-007D              4           1
         CONST            0003-0003              1           2
-                         011E-1FFF            100
+                         01AD-1FFF            100
         EEDATA           2100-21FF            100           2
         ENTRY            0003-0003              1           2
-                         011E-1FFF            100
+                         01AD-1FFF            100
         IDLOC            2000-2003              4           2
-        RAM              004E-006F             22           1
+        RAM              004B-006F             25           1
                          00A0-00EF             50
                          0110-016F             60
                          0190-01EF             60
@@ -137,206 +138,199 @@ UNUSED ADDRESS RANGES
         SFR3             0180-018F             10           1
         STACK            0110-016F             60           1
         STRCODE          0003-0003              1           2
-                         011E-1FFF           1EE2
+                         01AD-1FFF           1E53
         STRING           0003-0003              1           2
-                         011E-1FFF            100
+                         01AD-1FFF            100
 
                                   Symbol Table
 
-_ANSEL                      (abs)        0188
-_ANSELH                     (abs)        0189
-_CCP1IE                     (abs)        0462
-_CCP1IF                     (abs)        0062
-_CCP1M0                     (abs)        00B8
-_CCP1M1                     (abs)        00B9
-_CCP1M2                     (abs)        00BA
-_CCP1M3                     (abs)        00BB
-_CCPR1                      (abs)        0015
-_GIE                        (abs)        005F
-_PEIE                       (abs)        005E
-_PORTA                      (abs)        0005
-_RC_DATA                    bssBANK0     0040
-_RC_session_activated       bitbssBANK0  0268
-_RC_session_data_received   bitbssCOMMON 03E8
-_RC_session_start_received  bitbssCOMMON 03E9
-_T1CKPS0                    (abs)        0084
-_T1CKPS1                    (abs)        0085
-_TMR1                       (abs)        000E
-_TMR1CS                     (abs)        0081
-_TMR1GE                     (abs)        0086
-_TMR1ON                     (abs)        0080
-_TRISA                      (abs)        0085
-_TRISC1                     (abs)        0439
-__CFG_BOR4V$BOR21V          (abs)        0000
-__CFG_BOREN$OFF             (abs)        0000
-__CFG_CP$OFF                (abs)        0000
-__CFG_CPD$OFF               (abs)        0000
-__CFG_FCMEN$OFF             (abs)        0000
-__CFG_FOSC$HS               (abs)        0000
-__CFG_IESO$OFF              (abs)        0000
-__CFG_LVP$OFF               (abs)        0000
-__CFG_MCLRE$ON              (abs)        0000
-__CFG_PWRTE$OFF             (abs)        0000
-__CFG_WDTE$OFF              (abs)        0000
-__CFG_WRT$OFF               (abs)        0000
-__Habs1                     abs1         0000
-__Hbank0                    bank0        0000
-__Hbank1                    bank1        0000
-__Hbank2                    bank2        0000
-__Hbank3                    bank3        0000
-__HbitbssBANK0              bitbssBANK0  0000
-__HbitbssCOMMON             bitbssCOMMON 0000
-__HbssBANK0                 bssBANK0     0000
-__Hcinit                    cinit        0022
-__Hclrtext                  clrtext      0000
-__Hcode                     code         0000
-__Hcommon                   common       0000
-__Hconfig                   config       2009
-__HcstackBANK0              cstackBANK0  0000
-__HcstackCOMMON             cstackCOMMON 0000
-__Heeprom_data              eeprom_data  0000
-__Hend_init                 end_init     0015
-__Hfunctab                  functab      0000
-__Hidloc                    idloc        0000
-__Hinit                     init         0012
-__Hintentry                 intentry     0012
-__Hmaintext                 maintext     0000
-__HnvBANK0                  nvBANK0      0000
-__Hpowerup                  powerup      0000
-__Hram                      ram          0000
-__Hreset_vec                reset_vec    0003
-__Hsfr0                     sfr0         0000
-__Hsfr1                     sfr1         0000
-__Hsfr2                     sfr2         0000
-__Hsfr3                     sfr3         0000
-__Hspace_0                  (abs)        2009
-__Hspace_1                  (abs)        03EB
-__Hspace_2                  (abs)        0000
-__Hspace_3                  (abs)        0000
-__Hstack                    stack        0000
-__Hstrings                  strings      0000
-__Htext                     text         0000
-__Labs1                     abs1         0000
-__Lbank0                    bank0        0000
-__Lbank1                    bank1        0000
-__Lbank2                    bank2        0000
-__Lbank3                    bank3        0000
-__LbitbssBANK0              bitbssBANK0  0000
-__LbitbssCOMMON             bitbssCOMMON 0000
-__LbssBANK0                 bssBANK0     0000
-__Lcinit                    cinit        0015
-__Lclrtext                  clrtext      0000
-__Lcode                     code         0000
-__Lcommon                   common       0000
-__Lconfig                   config       2007
-__LcstackBANK0              cstackBANK0  0000
-__LcstackCOMMON             cstackCOMMON 0000
-__Leeprom_data              eeprom_data  0000
-__Lend_init                 end_init     0012
-__Lfunctab                  functab      0000
-__Lidloc                    idloc        0000
-__Linit                     init         0012
-__Lintentry                 intentry     0004
-__Lmaintext                 maintext     0000
-__LnvBANK0                  nvBANK0      0000
-__Lpowerup                  powerup      0000
-__Lram                      ram          0000
-__Lreset_vec                reset_vec    0000
-__Lsfr0                     sfr0         0000
-__Lsfr1                     sfr1         0000
-__Lsfr2                     sfr2         0000
-__Lsfr3                     sfr3         0000
-__Lspace_0                  (abs)        0000
-__Lspace_1                  (abs)        0000
-__Lspace_2                  (abs)        0000
-__Lspace_3                  (abs)        0000
-__Lstack                    stack        0000
-__Lstrings                  strings      0000
-__Ltext                     text         0000
-__S0                        (abs)        2009
-__S1                        (abs)        007E
-__S2                        (abs)        0000
-__S3                        (abs)        0000
-___int_sp                   stack        0000
-___latbits                  (abs)        0002
-___sp                       stack        0000
-__end_of__initialization    cinit        001E
-__end_of_interrupt_handler  text1        00C5
-__end_of_main               maintext     0116
-__initialization            cinit        0015
-__pbitbssBANK0              bitbssBANK0  0268
-__pbitbssCOMMON             bitbssCOMMON 03E8
-__pbssBANK0                 bssBANK0     0020
-__pcstackBANK0              cstackBANK0  0043
-__pcstackCOMMON             cstackCOMMON 0070
-__pintentry                 intentry     0004
-__pmaintext                 maintext     00C5
-__pnvBANK0                  nvBANK0      004B
-__ptext1                    text1        0022
-__size_of_interrupt_handler (abs)        0000
-__size_of_main              (abs)        0000
-_data                       bssBANK0     0020
-_data_bit_counter           bssBANK0     0041
-_interrupt_handler          text1        0022
-_last_CCP1_time             nvBANK0      004B
-_main                       maintext     00C5
-btemp                       (abs)        007E
-clear_ram0                  clrtext      0116
-end_of_initialization       cinit        001E
-interrupt_function          intentry     0004
-interrupt_handler@i         cstackCOMMON 0079
-interrupt_handler@i_56      cstackCOMMON 007A
-interrupt_handler@j         cstackCOMMON 0078
-interrupt_handler@temp      cstackCOMMON 007B
-intlevel0                   functab      0000
-intlevel1                   functab      0000
-intlevel2                   functab      0000
-intlevel3                   functab      0000
-intlevel4                   functab      0000
-intlevel5                   functab      0000
-ltemp                       (abs)        007E
-ltemp0                      (abs)        007E
-ltemp1                      (abs)        0082
-ltemp2                      (abs)        0086
-ltemp3                      (abs)        0080
-main@temp_TMR1              cstackBANK0  0047
-main@temp_last_CCP1_time    cstackBANK0  0049
-reset_vec                   reset_vec    0000
-saved_w                     (abs)        007E
-stackhi                     (abs)        0000
-stacklo                     (abs)        0000
-start                       init         0012
-start_initialization        cinit        0015
-ttemp                       (abs)        007E
-ttemp0                      (abs)        007E
-ttemp1                      (abs)        0081
-ttemp2                      (abs)        0084
-ttemp3                      (abs)        0087
-ttemp4                      (abs)        007F
-wtemp                       (abs)        007E
-wtemp0                      (abs)        007E
-wtemp1                      (abs)        0080
-wtemp2                      (abs)        0082
-wtemp3                      (abs)        0084
-wtemp4                      (abs)        0086
-wtemp5                      (abs)        0088
-wtemp6                      (abs)        007F
+_ANS8                         (abs)        0C48
+_ANSEL                        (abs)        0188
+_ANSELH                       (abs)        0189
+_GIE                          (abs)        005F
+_IOCB2                        (abs)        04B2
+_RB2                          (abs)        0032
+_RBIE                         (abs)        005B
+_RBIF                         (abs)        0058
+_RC_State                     bssBANK0     0043
+_RC_data                      bssBANK0     0020
+_RC_data_ready                bitbssCOMMON 03C0
+_RC_index                     bssBANK0     0044
+_T1CKPS0                      (abs)        0084
+_T1CKPS1                      (abs)        0085
+_TMR1                         (abs)        000E
+_TMR1CS                       (abs)        0081
+_TMR1GE                       (abs)        0086
+_TMR1ON                       (abs)        0080
+_TRISA                        (abs)        0085
+_TRISB2                       (abs)        0432
+__CFG_BOR4V$BOR21V            (abs)        0000
+__CFG_BOREN$OFF               (abs)        0000
+__CFG_CP$OFF                  (abs)        0000
+__CFG_CPD$OFF                 (abs)        0000
+__CFG_FCMEN$OFF               (abs)        0000
+__CFG_FOSC$HS                 (abs)        0000
+__CFG_IESO$OFF                (abs)        0000
+__CFG_LVP$OFF                 (abs)        0000
+__CFG_MCLRE$ON                (abs)        0000
+__CFG_PWRTE$OFF               (abs)        0000
+__CFG_WDTE$OFF                (abs)        0000
+__CFG_WRT$OFF                 (abs)        0000
+__Habs1                       abs1         0000
+__Hbank0                      bank0        0000
+__Hbank1                      bank1        0000
+__Hbank2                      bank2        0000
+__Hbank3                      bank3        0000
+__HbitbssCOMMON               bitbssCOMMON 0000
+__HbitnvCOMMON                bitnvCOMMON  0000
+__HbssBANK0                   bssBANK0     0000
+__Hcinit                      cinit        0021
+__Hclrtext                    clrtext      0000
+__Hcode                       code         0000
+__Hcommon                     common       0000
+__Hconfig                     config       2009
+__HcstackBANK0                cstackBANK0  0000
+__HcstackCOMMON               cstackCOMMON 0000
+__Heeprom_data                eeprom_data  0000
+__Hend_init                   end_init     0015
+__Hfunctab                    functab      0000
+__Hidloc                      idloc        0000
+__Hinit                       init         0012
+__Hintentry                   intentry     0012
+__Hmaintext                   maintext     0000
+__HnvBANK0                    nvBANK0      0000
+__Hpowerup                    powerup      0000
+__Hram                        ram          0000
+__Hreset_vec                  reset_vec    0003
+__Hsfr0                       sfr0         0000
+__Hsfr1                       sfr1         0000
+__Hsfr2                       sfr2         0000
+__Hsfr3                       sfr3         0000
+__Hspace_0                    (abs)        2009
+__Hspace_1                    (abs)        03C9
+__Hspace_2                    (abs)        0000
+__Hspace_3                    (abs)        0000
+__Hstack                      stack        0000
+__Hstrings                    strings      0000
+__Htext                       text         0000
+__Labs1                       abs1         0000
+__Lbank0                      bank0        0000
+__Lbank1                      bank1        0000
+__Lbank2                      bank2        0000
+__Lbank3                      bank3        0000
+__LbitbssCOMMON               bitbssCOMMON 0000
+__LbitnvCOMMON                bitnvCOMMON  0000
+__LbssBANK0                   bssBANK0     0000
+__Lcinit                      cinit        0015
+__Lclrtext                    clrtext      0000
+__Lcode                       code         0000
+__Lcommon                     common       0000
+__Lconfig                     config       2007
+__LcstackBANK0                cstackBANK0  0000
+__LcstackCOMMON               cstackCOMMON 0000
+__Leeprom_data                eeprom_data  0000
+__Lend_init                   end_init     0012
+__Lfunctab                    functab      0000
+__Lidloc                      idloc        0000
+__Linit                       init         0012
+__Lintentry                   intentry     0004
+__Lmaintext                   maintext     0000
+__LnvBANK0                    nvBANK0      0000
+__Lpowerup                    powerup      0000
+__Lram                        ram          0000
+__Lreset_vec                  reset_vec    0000
+__Lsfr0                       sfr0         0000
+__Lsfr1                       sfr1         0000
+__Lsfr2                       sfr2         0000
+__Lsfr3                       sfr3         0000
+__Lspace_0                    (abs)        0000
+__Lspace_1                    (abs)        0000
+__Lspace_2                    (abs)        0000
+__Lspace_3                    (abs)        0000
+__Lstack                      stack        0000
+__Lstrings                    strings      0000
+__Ltext                       text         0000
+__S0                          (abs)        2009
+__S1                          (abs)        007A
+__S2                          (abs)        0000
+__S3                          (abs)        0000
+___int_sp                     stack        0000
+___latbits                    (abs)        0002
+___sp                         stack        0000
+__end_of__initialization      cinit        001D
+__end_of_interrupt_handler    text1        01A5
+__end_of_main                 maintext     018E
+__initialization              cinit        0015
+__pbitbssCOMMON               bitbssCOMMON 03C0
+__pbitnvCOMMON                bitnvCOMMON  03C8
+__pbssBANK0                   bssBANK0     0020
+__pcstackBANK0                cstackBANK0  0045
+__pcstackCOMMON               cstackCOMMON 0070
+__pintentry                   intentry     0004
+__pmaintext                   maintext     0021
+__pnvBANK0                    nvBANK0      0049
+__ptext1                      text1        018E
+__size_of_interrupt_handler   (abs)        0000
+__size_of_main                (abs)        0000
+_interrupt_handler            text1        018E
+_last_RC_data                 bitnvCOMMON  03C8
+_last_RC_time                 nvBANK0      0049
+_last_critical_RC_time        bssBANK0     0041
+_main                         maintext     0021
+_nRBPU                        (abs)        040F
+btemp                         (abs)        007E
+clear_ram0                    clrtext      01A5
+end_of_initialization         cinit        001D
+interrupt_function            intentry     0004
+intlevel0                     functab      0000
+intlevel1                     functab      0000
+intlevel2                     functab      0000
+intlevel3                     functab      0000
+intlevel4                     functab      0000
+intlevel5                     functab      0000
+ltemp                         (abs)        007E
+ltemp0                        (abs)        007E
+ltemp1                        (abs)        0082
+ltemp2                        (abs)        0086
+ltemp3                        (abs)        0080
+main@last_RC_time_backup      cstackBANK0  0047
+main@last_critical_difference cstackBANK0  0045
+reset_vec                     reset_vec    0000
+saved_w                       (abs)        007E
+stackhi                       (abs)        0000
+stacklo                       (abs)        0000
+start                         init         0012
+start_initialization          cinit        0015
+ttemp                         (abs)        007E
+ttemp0                        (abs)        007E
+ttemp1                        (abs)        0081
+ttemp2                        (abs)        0084
+ttemp3                        (abs)        0087
+ttemp4                        (abs)        007F
+wtemp                         (abs)        007E
+wtemp0                        (abs)        007E
+wtemp1                        (abs)        0080
+wtemp2                        (abs)        0082
+wtemp3                        (abs)        0084
+wtemp4                        (abs)        0086
+wtemp5                        (abs)        0088
+wtemp6                        (abs)        007F
 
 
 FUNCTION INFORMATION:
 
  *************** function _main *****************
  Defined at:
-		line 54 in file "base_main.c"
+		line 59 in file "base_main.c"
  Parameters:    Size  Location     Type
 		None
  Auto vars:     Size  Location     Type
-  temp_last_CC    2    6[BANK0 ] unsigned int 
-  temp_TMR1       2    4[BANK0 ] unsigned int 
+  last_RC_time    2    2[BANK0 ] unsigned int 
+  last_critica    2    0[BANK0 ] unsigned int 
  Return value:  Size  Location     Type
                   1    wreg      void 
  Registers used:
-		wreg, status,2, status,0
+		wreg, fsr0l, fsr0h, status,2, status,0, btemp+1
  Tracked objects:
 		On entry : 
 		On exit  : 
@@ -344,8 +338,8 @@ FUNCTION INFORMATION:
  Data sizes:     COMMON   BANK0   BANK1   BANK3   BANK2
       Params:         0       0       0       0       0
       Locals:         0       4       0       0       0
-      Temps:          0       4       0       0       0
-      Totals:         0       8       0       0       0
+      Temps:          4       0       0       0       0
+      Totals:         4       4       0       0       0
 Total ram usage:        8 bytes
  Hardware stack levels required when called:    1
  This function calls:
@@ -357,28 +351,25 @@ Total ram usage:        8 bytes
 
  *************** function _interrupt_handler *****************
  Defined at:
-		line 99 in file "base_main.c"
+		line 218 in file "base_main.c"
  Parameters:    Size  Location     Type
 		None
  Auto vars:     Size  Location     Type
-  j               1    8[COMMON] unsigned char 
-  i               1   10[COMMON] unsigned char 
-  temp            2   11[COMMON] unsigned int 
-  i               1    9[COMMON] unsigned char 
+		None
  Return value:  Size  Location     Type
                   1    wreg      void 
  Registers used:
-		wreg, fsr0l, fsr0h, status,2, status,0
+		wreg
  Tracked objects:
 		On entry : 
 		On exit  : 
 		Unchanged: 
  Data sizes:     COMMON   BANK0   BANK1   BANK3   BANK2
       Params:         0       0       0       0       0
-      Locals:         5       0       0       0       0
-      Temps:          8       0       0       0       0
-      Totals:        13       0       0       0       0
-Total ram usage:       13 bytes
+      Locals:         0       0       0       0       0
+      Temps:          4       0       0       0       0
+      Totals:         4       0       0       0       0
+Total ram usage:        4 bytes
  Hardware stack levels used:    1
  This function calls:
 		Nothing
@@ -392,13 +383,13 @@ MODULE INFORMATION
 
 Module		Function		Class		Link	Load	Size
 base_main.c
-		_main          		CODE           	00C5	0000	82
-		_interrupt_handler		CODE           	0022	0000	164
+		_main          		CODE           	0021	0000	366
+		_interrupt_handler		CODE           	018E	0000	24
 
-base_main.c estimated size: 246
+base_main.c estimated size: 390
 
 shared
-		__initialization		CODE           	0015	0000	10
+		__initialization		CODE           	0015	0000	9
 
-shared estimated size: 10
+shared estimated size: 9
 

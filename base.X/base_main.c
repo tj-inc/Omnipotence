@@ -29,24 +29,29 @@
 
 // Global Defines
 enum Buttons {BUTTON_STOP = 0b00000000, BUTTON_OK = 0b00000010, BUTTON_ZERO = 0b01001010, BUTTON_UP = 0b01100010, BUTTON_DOWN = 0b10101000, BUTTON_LEFT = 0b00100010, BUTTON_RIGHT = 0b01001010};
-#define Start_Threshold 3000 // 12ms * 1000us/ms * 1/4
-#define Continue_Threshold 23250 // 93ms * 1000us/ms * 1/4
-#define Zero_Threshold 300 // 1.2ms * 1000us/ms * 1/4
-#define Void_Threshold 27800 // 110ms * 1000us/ms * 1/4 + 300 to compensate weird behavior
+enum RC_States {RC_RESET, RC_START_FALL, RC_START_RISE, RC_RECV_FALL, RC_RECV_RISE, RC_CONT_FALL1, RC_CONT_RISE1, RC_CONT_FALL2, RC_CONT_RISE2};
+//#define Start_Threshold 3000 // 12ms * 1000us/ms * 1/4
+//#define Continue_Threshold 23250 // 93ms * 1000us/ms * 1/4
+//#define Zero_Threshold 300 // 1.2ms * 1000us/ms * 1/4
+#define RC_Void_Threshold 27500 // 110ms * 1000us/ms * 1/4
+#define RC_Start_Low_Threshold 2200 // 8.8ms * 1000us/ms * 1/4
+#define RC_Start_Idle_Threshold 1000 // 4ms * 1000us/ms * 1/4
+#define RC_Data_Low_Threshold 1// maybe not need, to be larger than measured
+#define RC_Data_Zero_Threshold 375 // 1.5ms * 1000us/ms * 1/4
+#define RC_Cont_Idle_Threshold 500 // 2ms * 1000us/ms * 1/4 to be smaller than measured
 
 // Function Prototypes
 void interrupt interrupt_handler(void);
 
 // Global Variables
 // RC Module
-char RC_DATA = 0;
-char rc_data_index = 0; // Max 7
-unsigned int last_CCP1_time;
-bit RC_session_activated = 0;
-bit RC_session_start_received = 0;
-bit RC_session_data_received = 0;
-char data_bit_counter = 0;
-char data[32];
+char RC_State = 0;
+char RC_index = 0;
+char RC_data[33];
+unsigned int last_RC_time;
+unsigned int last_critical_RC_time;
+bit last_RC_data;
+bit RC_data_ready = 0;
 
 // System Main
 bit mode = 0; // 0 is manual, 1 is auto
@@ -56,6 +61,15 @@ void main(void) {
     TRISA = 0;
     ANSEL = 0;
     ANSELH = 0;
+    
+    // Init RB2
+    TRISB2 = 1;
+    ANS8 = 0;
+    nRBPU = 0;
+    IOCB2 = 1;
+    last_RC_data = RB2;
+    RBIF = 0;
+    RBIE = 1;
     
     // Init Timer 1
     TMR1GE = 0; TMR1ON = 1; 			//Enable TIMER1 (See Fig. 6-1 TIMER1 Block Diagram in PIC16F887 Data Sheet)
@@ -69,91 +83,142 @@ void main(void) {
 									01 = 1:2 Prescale Value
 									00 = 1:1 Prescale Value
 							*/
-    
-    // Init CCPR1 and relevant ports
-    TRISC1 = 0;
-    CCP1M3 = 0; CCP1M2 = 1; CCP1M1 = 0; CCP1M0 = 0; // Capture on every falling edge
-	CCP1IE = 1;
-	CCP1IF = 0;
-    last_CCP1_time = TMR1;
-	PEIE = 1;
+    last_RC_time = TMR1;
+
 	GIE = 1;
     
-    unsigned int temp_TMR1;
-    unsigned int temp_last_CCP1_time;
-    unsigned int temp;
+    unsigned int last_critical_difference;
+    unsigned int last_RC_time_backup;
     
     while (1) {
-        temp_last_CCP1_time = last_CCP1_time;
-//        for (char i = 0; i < 100; i++);
-        temp_TMR1 = TMR1 + 300;
-        temp = temp_TMR1 - temp_last_CCP1_time;
-        if ((temp > Void_Threshold)) {
-            RC_DATA = 0;
-            RC_session_activated = 0;
-            RC_session_start_received = 0;
-            RC_session_data_received = 0;
-            data_bit_counter = 0;
+//        temp_last_CCP1_time = last_CCP1_time;
+////        for (char i = 0; i < 100; i++);
+//        temp_TMR1 = TMR1 + 300;
+//        temp = temp_TMR1 - temp_last_CCP1_time;
+//        if ((temp > Void_Threshold)) {
+//            RC_DATA = 0;
+//            RC_session_activated = 0;
+//            RC_session_start_received = 0;
+//            RC_session_data_received = 0;
+//            data_bit_counter = 0;
+//        }
+//        PORTA = RC_DATA;
+        
+        // RC state transition
+        if (((signed int) (TMR1 - last_RC_time)) > RC_Void_Threshold) {
+            RC_State = RC_RESET;
+            RC_index = 0;
+            RC_data_ready = 0;
+        } else {
+            // Remember to update RC_index
+            switch (RC_State) {
+                case RC_RESET:
+                    if (last_RC_data == 0) {
+                        last_critical_RC_time = last_RC_time;
+                        RC_State = RC_START_FALL;
+                    }
+                    break;
+                case RC_START_FALL:
+                    if (last_RC_data == 1) {
+                        last_RC_time_backup = last_RC_time;
+                        last_critical_difference = last_RC_time_backup - last_critical_RC_time;
+                        if (last_critical_difference > RC_Start_Low_Threshold) {
+                            last_critical_RC_time = last_RC_time_backup;
+                            RC_State = RC_START_RISE;
+                        } else {
+                            RC_State = RC_RESET;
+                        }
+                    }
+                    break;
+                case RC_START_RISE:
+                    if (last_RC_data == 0) {
+                        last_RC_time_backup = last_RC_time;
+                        last_critical_difference = last_RC_time_backup - last_critical_RC_time;
+                        if (last_critical_difference > RC_Start_Idle_Threshold) {
+                            last_critical_RC_time = last_RC_time_backup;
+                            RC_State = RC_RECV_FALL;
+                        } else {
+                            RC_State = RC_RESET;
+                        }
+                    }
+                    break;
+                case RC_RECV_FALL:
+                    if (last_RC_data == 1) {
+                        RC_State = RC_RECV_RISE;
+                    }
+                    break;
+                case RC_RECV_RISE:
+                    if (last_RC_data == 0) {
+                        last_RC_time_backup = last_RC_time;
+                        if (RC_index == 32) {
+                            RC_State = RC_CONT_FALL1;
+                            if (last_critical_difference < RC_Data_Zero_Threshold) {
+                                RC_data[RC_index] = 0;
+                            } else {
+                                RC_data[RC_index] = 1;
+                            }
+                            RC_data_ready = 1;
+                        } else {
+                            last_critical_difference = last_RC_time_backup - last_critical_RC_time;
+                            if (last_critical_difference < RC_Data_Zero_Threshold) {
+                                RC_data[RC_index] = 0;
+                            } else {
+                                RC_data[RC_index] = 1;
+                            }
+                            last_critical_RC_time = last_RC_time_backup;
+                            RC_index++;
+                            RC_State = RC_RECV_FALL;
+                            RC_data_ready = 0;
+                        }
+                    }
+                    break;
+                case RC_CONT_FALL1:
+                    if (last_RC_data == 1) {
+                        last_RC_time_backup = last_RC_time;
+                        last_critical_difference = last_RC_time_backup - last_critical_RC_time;
+                        if (last_critical_difference > RC_Start_Low_Threshold) {
+                            last_critical_RC_time = last_RC_time_backup;
+                            RC_State = RC_CONT_RISE1;
+                        } else {
+                            RC_State = RC_CONT_RISE2;
+                        }
+                    }
+                    break;
+                case RC_CONT_RISE1:
+                    if (last_RC_data == 0) {
+                        last_RC_time_backup = last_RC_time;
+                        last_critical_difference = last_RC_time_backup - last_critical_RC_time;
+                        if (last_critical_difference > RC_Start_Idle_Threshold) {
+                            // Starting a new session
+                            last_critical_RC_time = last_RC_time_backup;
+                            RC_State = RC_RECV_FALL;
+                            RC_index = 0;
+                        } else if (last_critical_difference > RC_Cont_Idle_Threshold) {
+                            // Keep current session
+                            last_critical_RC_time = last_RC_time_backup;
+                            RC_State = RC_CONT_FALL2;
+                        } // Another else can be added for debugging purposes
+                    }
+                    break;
+                case RC_CONT_FALL2:
+                    if (last_RC_data == 1) {
+                        RC_State = RC_CONT_RISE2; // Won't work if there is interference
+                    }
+                    break;
+                case RC_CONT_RISE2:
+                    if (last_RC_data == 0) {
+                        last_critical_RC_time = last_RC_time;
+                        RC_State = RC_CONT_FALL1; // Won't work if there is interference
+                    }
+            }
         }
-        PORTA = RC_DATA;
     }
 }
 
 void interrupt interrupt_handler() {
-    if (CCP1IF == 1) {
-        if (RC_session_activated == 0) {
-            if (RC_session_start_received == 1) {
-                unsigned int temp = CCPR1-last_CCP1_time;
-                if (temp > Start_Threshold) {
-                    RC_session_activated = 1;
-                    data_bit_counter = 1;
-                }
-                RC_session_start_received = 0;
-                char i = 0;
-            } else {
-                RC_session_start_received = 1;
-                char i = 0;
-            }
-        } else {
-            if (RC_session_data_received == 0) {
-                data_bit_counter++;
-                if (data_bit_counter <= 33) {
-                    if (CCPR1-last_CCP1_time > Zero_Threshold) {
-                        data[data_bit_counter-2] = 1;
-                    } else {
-                        data[data_bit_counter-2] = 0;
-                    }
-                } else {
-                    RC_session_data_received = 1;
-                    RC_session_start_received = 1;
-                }
-//              if ((data_bit_counter >= 18) & (data_bit_counter <= 25)) { // We can only measure time difference at bit 18 - 25
-//                    if (CCPR1 - last_CCP1_time > Zero_Threshold) {
-//                        data[data_bit_counter-18] = 1;
-//                       RC_DATA++;
-//                    } else {
-//                        data[data_bit_counter-18] = 0;
-//                    }
-//                } else if (data_bit_counter > 33) {
-//                    RC_session_start_received = 1;
-//                }
-            } else {
-                if (RC_session_start_received == 0) {
-                    RC_session_start_received = 1;
-                } else {
-                    if (CCPR1 - last_CCP1_time > Start_Threshold) {
-                        RC_session_activated = 1;
-                        RC_session_start_received = 0;
-                        RC_session_data_received = 0;
-                        data_bit_counter = 1;
-                        RC_DATA = 0;
-                    } else if (CCPR1 - last_CCP1_time > Continue_Threshold) {
-                        RC_session_start_received = 0;
-                    }
-                }
-            }
-        }
-        last_CCP1_time = CCPR1;
-        CCP1IF = 0;
+    if (RBIF == 1) {
+        last_RC_time = TMR1;
+        last_RC_data = RB2;
+        RBIF = 0;
     }
 }
