@@ -2,6 +2,10 @@ base.X/build
 base.X/debug
 base.X/dist
 base.X/nbproject
+top.X/build
+top.X/debug
+top.X/dist
+top.X/nbproject
 
 # Object files
 *.o
