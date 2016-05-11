@@ -5,7 +5,6 @@
  * Created on May 8, 2016, 7:28 PM
  */
 
-
 #include <xc.h>
 
 // #pragma config statements should precede project file includes.
@@ -28,11 +27,9 @@
 #pragma config WRT = OFF        // Flash Program Memory Self Write Enable bits (Write protection off)
 
 // Global Defines
-enum Buttons {BUTTON_STOP = 0b00000000, BUTTON_OK = 0b00000010, BUTTON_ZERO = 0b01001010, BUTTON_UP = 0b01100010, BUTTON_DOWN = 0b10101000, BUTTON_LEFT = 0b00100010, BUTTON_RIGHT = 0b01001010};
+// RC Modules
+enum Buttons {BUTTON_STOP, BUTTON_UP, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_OK, BUTTON_ZERO};
 enum RC_States {RC_RESET, RC_START_FALL, RC_START_RISE, RC_RECV_FALL, RC_RECV_RISE, RC_CONT_FALL1, RC_CONT_RISE1, RC_CONT_FALL2, RC_CONT_RISE2};
-//#define Start_Threshold 3000 // 12ms * 1000us/ms * 1/4
-//#define Continue_Threshold 23250 // 93ms * 1000us/ms * 1/4
-//#define Zero_Threshold 300 // 1.2ms * 1000us/ms * 1/4
 #define RC_Void_Threshold 27500 // 110ms * 1000us/ms * 1/4
 #define RC_Start_Low_Threshold 2200 // 8.8ms * 1000us/ms * 1/4
 #define RC_Start_Idle_Threshold 1000 // 4ms * 1000us/ms * 1/4
@@ -40,29 +37,36 @@ enum RC_States {RC_RESET, RC_START_FALL, RC_START_RISE, RC_RECV_FALL, RC_RECV_RI
 #define RC_Data_Zero_Threshold 375 // 1.5ms * 1000us/ms * 1/4
 #define RC_Cont_Idle_Threshold 500 // 2ms * 1000us/ms * 1/4 to be smaller than measured
 
+// Mode
+#define mode RC4
+
+// Trigger
+#define pull_trigger RC5
+
 // Function Prototypes
+char RC_return_key(void);
+void MC_set_motion(char);
 void interrupt interrupt_handler(void);
 
 // Global Variables
 // RC Module
 char RC_State = 0;
 char RC_index = 0;
-char RC_data[8];
+char RC_data[3];
 unsigned int last_RC_time;
 unsigned int last_critical_RC_time;
 bit last_RC_data;
 bit RC_data_ready = 0;
 
-// System Main
-bit mode = 0; // 0 is manual, 1 is auto
-
 void main(void) {
+    // Init RC4 and RC5 for mode and trigger
+    TRISC = 0;
+    PORTC = 0;
     
-    TRISA = 0;
-    ANSEL = 0;
-    ANSELH = 0;
+    // Init RD2:0 for top's motion control signal
+    TRISD = 0x07;
     
-    // Init RB2
+    // Init RB2 for RC Module
     TRISB2 = 1;
     ANS8 = 0;
     nRBPU = 0;
@@ -75,20 +79,14 @@ void main(void) {
     TMR1GE = 0; TMR1ON = 1; 			//Enable TIMER1 (See Fig. 6-1 TIMER1 Block Diagram in PIC16F887 Data Sheet)
 	TMR1CS = 0; 					//Select internal clock whose frequency is Fosc/4, where Fosc = 8 MHz
 	T1CKPS1 = 1; T1CKPS0 = 1; 		 	//Set prescale to divide by 4 yielding a clock tick period of 2 microseconds
-
-							/*	From Section 6.12 of PIC16F887 Datasheet:
-									bit 5-4 T1CKPS<1:0>: Timer1 Input Clock Prescale Select bits
-									11 = 1:8 Prescale Value
-									10 = 1:4 Prescale Value
-									01 = 1:2 Prescale Value
-									00 = 1:1 Prescale Value
-							*/
     last_RC_time = TMR1;
 
 	GIE = 1;
     
     unsigned int last_critical_difference;
     unsigned int last_RC_time_backup;
+    char RC_key = BUTTON_STOP;
+    char last_RC_key; // This is debouncing for mode switching (one press yields one switch)
     
     while (1) {
         // RC state transition
@@ -142,7 +140,7 @@ void main(void) {
                             RC_data_ready = 1;
                         } else {
                             last_critical_difference = last_RC_time_backup - last_critical_RC_time;
-                            if ((16 <= RC_index) & (RC_index <= 23)) {
+                            if ((16 <= RC_index) & (RC_index <= 18)) { // We only need first 3 bits
                                 if (last_critical_difference < RC_Data_Zero_Threshold) {
                                     RC_data[RC_index-16] = 0;
                                 } else {
@@ -196,7 +194,56 @@ void main(void) {
                     }
             }
         }
+        last_RC_key = RC_key;
+        RC_key = RC_return_key();
+        // Update mode
+        if ((RC_key == BUTTON_ZERO) & (last_RC_key != BUTTON_ZERO)) {
+            mode = ~mode;
+        }
+        
+        // Update pull_trigger
+        pull_trigger = (RC_key == BUTTON_OK);
+        
+        if (mode) {
+            // auto
+            MC_set_motion(PORTD);
+        } else {
+            // manual
+            MC_set_motion(((RC_key == BUTTON_ZERO) | RC_key == BUTTON_OK) ? BUTTON_STOP : RC_key);
+        }
     }
+}
+
+char RC_return_key() {
+    if (RC_data_ready) {
+        if (RC_data[0]) {
+            if (RC_data[1]) {
+                return BUTTON_RIGHT;
+            } else {
+                return BUTTON_DOWN;
+            }
+        } else {
+            if (RC_data[1]) {
+                if (RC_data[2]) {
+                    return BUTTON_UP;
+                } else {
+                    return BUTTON_ZERO;
+                }
+            } else {
+                if (RC_data[2]) {
+                    return BUTTON_LEFT;
+                } else {
+                    return BUTTON_OK;
+                }
+            }
+        }
+    } else {
+        return BUTTON_STOP;
+    }
+}
+
+void MC_set_motion(char motion) {
+    
 }
 
 void interrupt interrupt_handler() {
