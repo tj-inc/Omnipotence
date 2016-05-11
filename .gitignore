@@ -1,3 +1,8 @@
+base.X\build
+base.X\debug
+base.X\dist
+base.X\nbproject
+
 # Object files
 *.o
 *.ko

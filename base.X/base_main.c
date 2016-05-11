@@ -47,7 +47,7 @@ void interrupt interrupt_handler(void);
 // RC Module
 char RC_State = 0;
 char RC_index = 0;
-char RC_data[33];
+char RC_data[8];
 unsigned int last_RC_time;
 unsigned int last_critical_RC_time;
 bit last_RC_data;
@@ -91,19 +91,6 @@ void main(void) {
     unsigned int last_RC_time_backup;
     
     while (1) {
-//        temp_last_CCP1_time = last_CCP1_time;
-////        for (char i = 0; i < 100; i++);
-//        temp_TMR1 = TMR1 + 300;
-//        temp = temp_TMR1 - temp_last_CCP1_time;
-//        if ((temp > Void_Threshold)) {
-//            RC_DATA = 0;
-//            RC_session_activated = 0;
-//            RC_session_start_received = 0;
-//            RC_session_data_received = 0;
-//            data_bit_counter = 0;
-//        }
-//        PORTA = RC_DATA;
-        
         // RC state transition
         if (((signed int) (TMR1 - last_RC_time)) > RC_Void_Threshold) {
             RC_State = RC_RESET;
@@ -152,18 +139,15 @@ void main(void) {
                         last_RC_time_backup = last_RC_time;
                         if (RC_index == 32) {
                             RC_State = RC_CONT_FALL1;
-                            if (last_critical_difference < RC_Data_Zero_Threshold) {
-                                RC_data[RC_index] = 0;
-                            } else {
-                                RC_data[RC_index] = 1;
-                            }
                             RC_data_ready = 1;
                         } else {
                             last_critical_difference = last_RC_time_backup - last_critical_RC_time;
-                            if (last_critical_difference < RC_Data_Zero_Threshold) {
-                                RC_data[RC_index] = 0;
-                            } else {
-                                RC_data[RC_index] = 1;
+                            if ((16 <= RC_index) & (RC_index <= 23)) {
+                                if (last_critical_difference < RC_Data_Zero_Threshold) {
+                                    RC_data[RC_index-16] = 0;
+                                } else {
+                                    RC_data[RC_index-16] = 1;
+                                }
                             }
                             last_critical_RC_time = last_RC_time_backup;
                             RC_index++;
