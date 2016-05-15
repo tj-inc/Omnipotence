@@ -28,16 +28,114 @@
 #pragma config WRT = OFF        // Flash Program Memory Self Write Enable bits (Write protection off)
 
 // Global Defines
+// TDP Module
+#define TDP_LEFT RA0
+#define TDP_CENTER RA1
+#define TDP_RIGHT RA2
+#define TDP_ONE_MIN 4437800   // 1min * 60s/min * 1000ms/s * 1000us/ms * 2/us / 30 = 4000000
+
+// WD Module
+#define WD_LEFT RB0
+#define WD_CENTER RB1
+#define WD_RIGHT RB2
+#define WD_Trigger_Width 10
+#define WD_Collision_Threshold 174 // 30cm * 58us/cm
+
+// MC Module
+
+// Mode
+#define mode RC0
+
+// Trigger
+#define pull_trigger RC1
+#define PWM_PERIOD 20000
+enum Pulse_Widths {MIN_HIGH = 500, FORTYFIVE_HIGH = 1003, NINTY_HIGH = 1505, ONETHIRTYFIVE_HIGH = 2008, MAX_HIGH = 2510};
+
+// RGB Module
+#define RGB_R RC4
+#define RGB_G RC5
+#define RGB_B RC6
+enum System_States {SYSTEM_INIT, SYSTEM_MANUAL, SYSTEM_SEARCHING, SYSTEM_ENGAGED};
 
 // Function Prototypes
 void interrupt interrupt_handler(void);
 
 // Global Variables
+// TDP Module
+
+// WD Module
+bit WD_last_left;
+bit WD_last_center;
+bit WD_last_right;
+unsigned int last_WD_time;
+
+// RGB Module
+char system_state = SYSTEM_INIT;
+
+// Trigger
+unsigned int high_pulse = 0;
 
 void main(void) {
-    while (1);
+    // Initialize RC0 and RC1 for mode and pull_trigger, and RC6:4 for RGB
+    ANSEL = 0;
+    ANSELH = 0;
+    TRISC = 0b1110111;
+    
+    // TDP Module
+    TRISA = 0b111;
+    
+    // WD Module
+    TRISB = 0b111;
+//    nRBPU = 0;
+    IOCB = 0b111;
+    WD_last_left = WD_LEFT;
+    WD_last_center = WD_CENTER;
+    WD_last_right = WD_RIGHT;
+    RBIF = 0;
+    RBIE = 1;
+    
+    // Init Timer 1
+    TMR1GE = 0; TMR1ON = 1; 			//Enable TIMER1 (See Fig. 6-1 TIMER1 Block Diagram in PIC16F887 Data Sheet)
+	TMR1CS = 0; 					//Select internal clock whose frequency is Fosc/4, where Fosc = 8 MHz
+	T1CKPS1 = 0; T1CKPS0 = 1; 		 	//Set prescale to divide by 2 yielding a clock tick period of 1 microseconds
+    
+    // Init CCP1 for PWM
+    CCP1M3 = 0;
+    CCP1M2 = 0;
+    CCP1M1 = 1;
+    CCP1M0 = 0;
+    CCP1IE = 1;
+	CCP1IF = 0;
+    
+    // Delay 1 minute to prepare the sensors
+    for (long i = 1; i < TDP_ONE_MIN; i++);
+    
+    // Turn on Interrupts
+    PEIE = 1;
+	GIE = 1;
+    while (1) {
+        if (mode) {
+            // This is auto mode
+            
+        }
+    }
 }
 
 void interrupt interrupt_handler() {
-    return;
+    if (CCP1IF == 1) {
+        if (RC2 == 1) {
+            CCPR1 = CCPR1 + high_pulse;
+        } else {
+            CCPR1 = CCPR1 + PWM_PERIOD - high_pulse;
+        }
+        CCP1IF = 0;
+    }
+    
+    if (RBIF) {
+        last_WD_time = TMR1;
+        WD_last_left = WD_LEFT;
+        WD_last_center = WD_CENTER;
+        WD_last_right = WD_RIGHT;
+        RBIF = 1;
+    }
 }

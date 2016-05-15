@@ -28,7 +28,7 @@
 
 // Global Defines
 // RC Modules
-enum Buttons {BUTTON_STOP, BUTTON_UP, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_OK, BUTTON_ZERO};
+enum Buttons {BUTTON_STOP, BUTTON_UP, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_DOWN, BUTTON_OK, BUTTON_ZERO};
 enum RC_States {RC_RESET, RC_START_FALL, RC_START_RISE, RC_RECV_FALL, RC_RECV_RISE, RC_CONT_FALL1, RC_CONT_RISE1, RC_CONT_FALL2, RC_CONT_RISE2};
 #define RC_Void_Threshold 27500 // 110ms * 1000us/ms * 1/4
 #define RC_Start_Low_Threshold 2200 // 8.8ms * 1000us/ms * 1/4
@@ -38,7 +38,7 @@ enum RC_States {RC_RESET, RC_START_FALL, RC_START_RISE, RC_RECV_FALL, RC_RECV_RI
 #define RC_Cont_Idle_Threshold 500 // 2ms * 1000us/ms * 1/4 to be smaller than measured
 
 // MC Module
-enum Motions {CMD_STOP, CMD_FORWARD, CMD_BACKWARD, CMD_LEFT, CMD_RIGHT};
+enum Motions {CMD_STOP, CMD_FORWARD, CMD_LEFT, CMD_RIGHT, CMD_BACKWARD};
 enum MC_Command_Outputs {STOP = 0, FORWARD = 0b0101, BACKWARD = 0b1010, TURN_LEFT = 0b0110, TURN_RIGHT = 0b1001};
 #define MC_HIGH_PULSE 37500 // (75% duty cycle) 15ms * 1000us/ms * 1/4
 #define MC_LOW_PULSE  12500 // 5ms * 1000us/ms * 1/4
