@@ -40,8 +40,8 @@ enum RC_States {RC_RESET, RC_START_FALL, RC_START_RISE, RC_RECV_FALL, RC_RECV_RI
 // MC Module
 enum Motions {CMD_STOP, CMD_FORWARD, CMD_LEFT, CMD_RIGHT, CMD_BACKWARD};
 enum MC_Command_Outputs {STOP = 0, FORWARD = 0b0101, BACKWARD = 0b1010, TURN_LEFT = 0b0110, TURN_RIGHT = 0b1001};
-#define MC_HIGH_PULSE 37500 // (75% duty cycle) 15ms * 1000us/ms * 1/4
-#define MC_LOW_PULSE  12500 // 5ms * 1000us/ms * 1/4
+#define MC_HIGH_PULSE 37800 // 90% duty cycle
+#define MC_LOW_PULSE  4200
 #define ENA RB0
 #define ENB RB1
 #define MC_TOP_COMMAND_OUT PORTD
@@ -76,8 +76,8 @@ void main(void) {
     TRISC = 0;
     PORTC = 0;
     
-    // Init RD2:0 for top's motion control signal
-    TRISD = 0x07;
+    // Init RD1:0 for top's motion control signal
+    TRISD = 0x03;
     
     // Init RB2 for RC Module, RB1 and RB0, RA3:0 for MC Module
     TRISB = 0b100;

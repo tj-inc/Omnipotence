@@ -33,6 +33,7 @@
 #define TDP_CENTER RA1
 #define TDP_RIGHT RA2
 #define TDP_ONE_MIN 4437800   // 1min * 60s/min * 1000ms/s * 1000us/ms * 2/us / 30 = 4000000
+enum TDP_States {LEFT90, RIGHT90, LEFT180, RIGHT180, TDP_Standby};
 
 // WD Module
 #define WD_LEFT RB0
@@ -42,6 +43,11 @@
 #define WD_Collision_Threshold 174 // 30cm * 58us/cm
 
 // MC Module
+#define MC_OUT PORTD
+#define NINTY_DEG_COUNT 12
+#define ONEEIGHTY_DEG_COUNT 24
+enum Motions {CMD_STOP, CMD_FORWARD, CMD_LEFT, CMD_RIGHT};
+enum MC_States {Turn_Left, Turn_Right, Go_Forward};
 
 // Mode
 #define mode RC0
@@ -55,9 +61,9 @@ enum Pulse_Widths {MIN_HIGH = 125, FORTYFIVE_HIGH = 251, NINTY_HIGH = 376, ONETH
 enum Trigger_States {Trigger_StandBy, Trigger_Pulled, Trigger_CoolDown};
 
 // RGB Module
-#define RGB_R RC4
-#define RGB_G RC5
-#define RGB_B RC6
+#define R RC4
+#define G RC5
+#define B RC6
 enum System_States {SYSTEM_INIT, SYSTEM_MANUAL, SYSTEM_SEARCHING, SYSTEM_ENGAGED};
 
 // Function Prototypes
@@ -65,6 +71,8 @@ void interrupt interrupt_handler(void);
 
 // Global Variables
 // TDP Module
+char TDP_state = TDP_Standby;
+bit last_direction = 0; // 0 is left, 1 is right
 
 // WD Module
 bit WD_last_left;
@@ -73,24 +81,25 @@ bit WD_last_right;
 unsigned int last_WD_time;
 
 // RGB Module
-char system_state = SYSTEM_INIT;
+char system_state;
 
 // Trigger
 unsigned int high_pulse = MIN_HIGH;
 char trigger_state = Trigger_StandBy;
 char counter = 0;
+bit trigger_under_auto = 0;
 
-//// Async Task Management Module
-//struct Task delays[11];
-//char task_index = 1;
+// MC Module
+char MC_state;
 
 void main(void) {
     // Initialize RC0 and RC1 for mode and pull_trigger, and RC6:4 for RGB
     ANSEL = 0;
     ANSELH = 0;
-//    TRISC = 0b1110011;
-    TRISC = 0xFF;
-    TRISC2 = 0;
+    TRISC = 0b0000011;
+    
+    // MC Module
+    TRISD = 0;
     
     // TDP Module
     TRISA = 0b111;
@@ -99,9 +108,9 @@ void main(void) {
     TRISB = 0b111;
 //    nRBPU = 0;
 //    IOCB = 0b111;
-    WD_last_left = WD_LEFT;
-    WD_last_center = WD_CENTER;
-    WD_last_right = WD_RIGHT;
+//    WD_last_left = WD_LEFT;
+//    WD_last_center = WD_CENTER;
+//    WD_last_right = WD_RIGHT;
     RBIF = 0;
     RBIE = 1;
     
@@ -120,8 +129,12 @@ void main(void) {
     CCP2IE = 0; // We don't enable the interrupt yet
 	CCP2IF = 0;
     
+    // RGB Module
+    system_state = SYSTEM_INIT;
+    R = 1; G = 1; B = 0;
     // Delay 1 minute to prepare the sensors
 //    for (long i = 1; i < TDP_ONE_MIN; i++);
+    system_state = SYSTEM_MANUAL;
     
     // Turn on Interrupts
     CCPR1 = CCPR1 + 100;
@@ -130,13 +143,85 @@ void main(void) {
     while (1) {
         if (mode) {
             // This is auto mode
-            // Trigger FSM
-            
+            if (TDP_CENTER) {
+                system_state = SYSTEM_ENGAGED;
+                MC_state = Go_Forward;
+                TDP_state = TDP_Standby;
+            } else {
+                system_state = SYSTEM_SEARCHING;
+                if (TDP_LEFT) {
+                    MC_state = Turn_Right;
+                    TDP_state = TDP_Standby;
+                } else if (TDP_RIGHT) {
+                    MC_state = Turn_Left;
+                    TDP_state = TDP_Standby;
+                } else {
+                    // TDP FSM
+                    switch (TDP_state) {
+                        case TDP_Standby:
+                            if (last_direction) {
+                                TDP_state = LEFT90;
+                            } else {
+                                TDP_state = RIGHT90;
+                            }
+                            break;
+                        case LEFT90:
+                            MC_state = Turn_Left;
+                            if (CCP2IE == 0) {
+                                CCPR2 = CCPR2 + TWOFIFTY_MS;
+                                CCP2IE = 1;
+                            }
+                            break;
+                        case RIGHT90:
+                            MC_state = Turn_Right;
+                            if (CCP2IE == 0) {
+                                CCPR2 = CCPR2 + TWOFIFTY_MS;
+                                CCP2IE = 1;
+                            }
+                            break;
+                        case LEFT180:
+                            MC_state = Turn_Left;
+                            if (CCP2IE == 0) {
+                                CCPR2 = CCPR2 + TWOFIFTY_MS;
+                                CCP2IE = 1;
+                            }
+                            break;
+                        case RIGHT180:
+                            MC_state = Turn_Right;
+                            if (CCP2IE == 0) {
+                                CCPR2 = CCPR2 + TWOFIFTY_MS;
+                                CCP2IE = 1;
+                            }
+                            break;
+                    }
+                }
+            }
+        } else {
+            system_state = SYSTEM_MANUAL;
         }
         
+        // System Main FSM
+        switch (system_state) {
+            case SYSTEM_MANUAL:
+                R = 0; G = 1; B = 0;
+                break;
+            case SYSTEM_SEARCHING:
+                trigger_under_auto = 0;
+                R = 0; G = 1; B = 1;
+                break;
+            case SYSTEM_ENGAGED:
+                trigger_under_auto = 1;
+                R = 1; G = 0; B = 0;
+                break;
+            default:
+                R = 1; G = 1; B = 0;
+                break;
+        }
+        
+        // Trigger FSM
         switch (trigger_state) {
             case Trigger_StandBy:
-                if (pull_trigger == 0) {
+                if ((mode & trigger_under_auto) | (~mode & pull_trigger)) {
                     trigger_state = Trigger_Pulled;
                     counter = 0;
                 }
@@ -171,24 +256,65 @@ void interrupt interrupt_handler() {
     }
     
     if (CCP2IF) {
-        switch (trigger_state) {  // Do I know the current state is always right when I'm here
-            case Trigger_Pulled:
-                if (counter == TRIG_DELAY_MULTIPLIER) {
-                    trigger_state = Trigger_CoolDown;
-                    counter = 0;
-                    CCP2IE = 0;
-                } else {
-                    counter++;
-                }
-                break;
-            case Trigger_CoolDown:
-                if (counter == TRIG_DELAY_MULTIPLIER) {
-                    trigger_state = Trigger_StandBy;
-                    CCP2IE = 0;
-                } else {
-                    counter++;
-                }
-                break;
+        if (TDP_state == TDP_Standby) {
+            switch (trigger_state) {  // Do I know the current state is always right when I'm here
+                case Trigger_Pulled:
+                    if (counter >= TRIG_DELAY_MULTIPLIER) {
+                        trigger_state = Trigger_CoolDown;
+                        counter = 0;
+                        CCP2IE = 0;
+                    } else {
+                        counter++;
+                    }
+                    break;
+                case Trigger_CoolDown:
+                    if (counter >= TRIG_DELAY_MULTIPLIER) {
+                        trigger_state = Trigger_StandBy;
+                        CCP2IE = 0;
+                    } else {
+                        counter++;
+                    }
+                    break;
+            }
+        } else {
+            switch (TDP_state) {
+                case LEFT90:
+                    if (counter >= NINTY_DEG_COUNT) {
+                        TDP_state = RIGHT180;
+                        counter = 0;
+                        CCP2IE = 0;
+                    } else {
+                        counter++;
+                    }
+                    break;
+                case RIGHT90:
+                    if (counter >= NINTY_DEG_COUNT) {
+                        TDP_state = LEFT180;
+                        counter = 0;
+                        CCP2IE = 0;
+                    } else {
+                        counter++;
+                    }
+                    break;
+                case LEFT180:
+                    if (counter >= ONEEIGHTY_DEG_COUNT) {
+                        TDP_state = RIGHT180;
+                        counter = 0;
+                        CCP2IE = 0;
+                    } else {
+                        counter++;
+                    }
+                    break;
+                case RIGHT180:
+                    if (counter >= ONEEIGHTY_DEG_COUNT) {
+                        TDP_state = LEFT180;
+                        counter = 0;
+                        CCP2IE = 0;
+                    } else {
+                        counter++;
+                    }
+                    break;
+            }
         }
         CCP2IF = 0;
     }
