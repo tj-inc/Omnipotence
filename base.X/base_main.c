@@ -70,6 +70,8 @@ bit RC_data_ready = 0;
 
 // MC Module
 char last_motion = CMD_STOP;
+char RC_key;
+char last_RC_key;
 
 void main(void) {
     // Init RC4 and RC5 for mode and trigger
@@ -85,6 +87,12 @@ void main(void) {
     ANSEL = 0;
     ANSELH = 0;
     nRBPU = 0;
+    
+    PORTA = 0;
+    PORTB = 0;
+    PORTC = 0;
+    PORTD = 0;
+    
     IOCB2 = 1;
     last_RC_data = RB2;
     RBIF = 0;
@@ -113,8 +121,8 @@ void main(void) {
     
     unsigned int last_critical_difference;
     unsigned int last_RC_time_backup;
-    char RC_key = BUTTON_STOP;
-    char last_RC_key; // This is debouncing for mode switching (one press yields one switch)
+//    char RC_key = BUTTON_STOP;
+//    char last_RC_key; // This is debouncing for mode switching (one press yields one switch)
     
     while (1) {
         // RC state transition
@@ -271,9 +279,10 @@ char RC_return_key() {
 }
 
 void MC_set_motion(char motion) {
-//    if (motion == last_motion) {
-//        return;
-//    } else {
+    if (motion == last_motion) {
+        return;
+    } else {
+        last_motion = motion;
         switch (motion) {
             case CMD_STOP:
                 MC_BASE_COMMAND_OUT = STOP;
@@ -291,7 +300,7 @@ void MC_set_motion(char motion) {
                 MC_BASE_COMMAND_OUT = TURN_RIGHT;
                 return;
         }
-//    }
+    }
 }
 
 void interrupt interrupt_handler() {
