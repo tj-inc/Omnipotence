@@ -71,7 +71,7 @@ bit RC_data_ready = 0;
 // MC Module
 char last_motion = CMD_STOP;
 char RC_key;
-char last_RC_key;
+char last_RC_key; // This is debouncing for mode switching (one press yields one switch)
 
 void main(void) {
     // Init RC4 and RC5 for mode and trigger
@@ -121,8 +121,6 @@ void main(void) {
     
     unsigned int last_critical_difference;
     unsigned int last_RC_time_backup;
-//    char RC_key = BUTTON_STOP;
-//    char last_RC_key; // This is debouncing for mode switching (one press yields one switch)
     
     while (1) {
         // RC state transition

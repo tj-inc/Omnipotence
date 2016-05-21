@@ -130,13 +130,6 @@ void main(void) {
     PORTB = 0;
     PORTC = 0;
     PORTD = 0;
-//    nRBPU = 0;
-//    IOCB = 0b111;
-//    WD_last_left = WD_LEFT;
-//    WD_last_center = WD_CENTER;
-//    WD_last_right = WD_RIGHT;
-//    RBIF = 0;
-//    RBIE = 1;
     
     // Init Timer 0
     T0CS = 0;
@@ -179,22 +172,7 @@ void main(void) {
     while (1) {
         if (mode) {
             // This is auto mode
-            switch (WD_state) {//Left_Out, Left_In, Center_Out, Center_in, Right_Out, Right_In};
-                /*
-bit WD_last_left;
-bit WD_last_center;
-bit WD_last_right;
-unsigned int last_RE_time;
-unsigned int last_FE_time;
-char WD_state;
-bit WD_feedback_received = 0;
-bit WD_probe_finished = 0;
-#define WD_LEFT RB0
-#define WD_CENTER RB1
-#define WD_RIGHT RB2
-#define WD_Trigger_Width 10
-#define WD_Collision_Threshold 174 // 30cm * 58us/cm
-#define WD_10us 246*/
+            switch (WD_state) {
                 case Left_Out:
                     TRISB0 = 0;
                     if (WD_probe_sent) {
@@ -477,7 +455,7 @@ void interrupt interrupt_handler() {
     
     if (CCP2IF) {
         CCPR2 = CCPR2 + TWOFIFTY_MS;
-        switch (trigger_state) {  // Do I know the current state is always right when I'm here
+        switch (trigger_state) {
             case Trigger_Pulled:
                 if (trigger_counter == TRIG_DELAY_MULTIPLIER) {
                     trigger_state = Trigger_CoolDown;
