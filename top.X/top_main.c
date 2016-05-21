@@ -33,7 +33,7 @@
 #define TDP_CENTER RA1
 #define TDP_RIGHT RA2
 #define TDP_ONE_MIN 4135000   // 1min * 60s/min * 1000ms/s * 1000us/ms * 2/us / 30 = 4000000
-enum TDP_States {LEFT90, RIGHT90, LEFT180, RIGHT180, TDP_Standby};
+enum TDP_States {LEFT90, RIGHT90, LEFT180, RIGHT180, TDP_Standby, TDP_Engaged, TDP_Evade_Left1, TDP_Evade_Left2, TDP_Evade_Center1, TDP_Evade_Center2, TDP_Evade_Right1, TDP_Evade_Right2};
 
 // WD Module
 #define WD_LEFT RB0
@@ -41,11 +41,15 @@ enum TDP_States {LEFT90, RIGHT90, LEFT180, RIGHT180, TDP_Standby};
 #define WD_RIGHT RB2
 #define WD_Trigger_Width 10
 #define WD_Collision_Threshold 174 // 30cm * 58us/cm
+#define WD_10us 246
+enum WD_States {Left_Out, Left_In, Center_Out, Center_In, Right_Out, Right_In};
 
 // MC Module
 #define MC_OUT PORTD
+#define FORTYFIVE_DEG_COUNT 4
 #define NINTY_DEG_COUNT 8
 #define ONEEIGHTY_DEG_COUNT 16
+#define ENGAGED_DELAY 2
 enum Motions {CMD_STOP, CMD_FORWARD, CMD_LEFT, CMD_RIGHT};
 enum MC_States {Stop, Go_Forward, Turn_Left, Turn_Right};
 
@@ -60,7 +64,7 @@ enum MC_States {Stop, Go_Forward, Turn_Left, Turn_Right};
 #define PWM_INCREMENT 125
 #define TWOFIFTY_MS 62500
 #define TRIG_DELAY_MULTIPLIER 5
-#define TRIG_COOLDOWN_MULTIPLIER 20
+#define TRIG_COOLDOWN_MULTIPLIER 10
 enum Pulse_Widths {MIN_HIGH = 1, MAX_HIGH = 5, TOTAL_WIDTH = 40};
 enum Trigger_States {Trigger_StandBy, Trigger_Pulled, Trigger_CoolDown};
 
@@ -71,6 +75,9 @@ enum Trigger_States {Trigger_StandBy, Trigger_Pulled, Trigger_CoolDown};
 enum System_States {SYSTEM_INIT, SYSTEM_MANUAL, SYSTEM_SEARCHING, SYSTEM_ENGAGED};
 
 // Function Prototypes
+void TDP_evade_left(void);
+void TDP_evade_center(void);
+void TDP_evade_right(void);
 void interrupt interrupt_handler(void);
 
 // Global Variables
@@ -78,13 +85,20 @@ void interrupt interrupt_handler(void);
 #define nTDP_Delay_Override RC7
 char TDP_counter = 0;
 char TDP_state = TDP_Standby;
+char TDP_saved_state;
+char TDP_evade_counter = 0;
 bit last_direction = 0; // 0 is left, 1 is right
 
 // WD Module
 bit WD_last_left;
 bit WD_last_center;
 bit WD_last_right;
-unsigned int last_WD_time;
+unsigned int last_RE_time;
+unsigned int last_FE_time;
+char WD_state;
+bit WD_feedback_received = 0;
+bit WD_probe_sent = 0;
+bit WD_probe_finished = 0;
 
 // RGB Module
 char system_state;
@@ -111,7 +125,7 @@ void main(void) {
     TRISA = 0b111;
     
     // WD Module
-    TRISB = 0b111;
+    TRISB = 0;
     PORTA = 0;
     PORTB = 0;
     PORTC = 0;
@@ -123,6 +137,11 @@ void main(void) {
 //    WD_last_right = WD_RIGHT;
 //    RBIF = 0;
 //    RBIE = 1;
+    
+    // Init Timer 0
+    T0CS = 0;
+    PSA = 0;
+    OPTION_REG &= 0b11111000; // Prescaler of 2
     
     // Init Timer 1
     TMR1GE = 0; TMR1ON = 1; 			//Enable TIMER1 (See Fig. 6-1 TIMER1 Block Diagram in PIC16F887 Data Sheet)
@@ -160,10 +179,122 @@ void main(void) {
     while (1) {
         if (mode) {
             // This is auto mode
+            switch (WD_state) {//Left_Out, Left_In, Center_Out, Center_in, Right_Out, Right_In};
+                /*
+bit WD_last_left;
+bit WD_last_center;
+bit WD_last_right;
+unsigned int last_RE_time;
+unsigned int last_FE_time;
+char WD_state;
+bit WD_feedback_received = 0;
+bit WD_probe_finished = 0;
+#define WD_LEFT RB0
+#define WD_CENTER RB1
+#define WD_RIGHT RB2
+#define WD_Trigger_Width 10
+#define WD_Collision_Threshold 174 // 30cm * 58us/cm
+#define WD_10us 246*/
+                case Left_Out:
+                    TRISB0 = 0;
+                    if (WD_probe_sent) {
+                        if (WD_probe_finished) {
+                            WD_LEFT = 0;
+                            T0IE = 0;
+                            WD_state = Left_In;
+                            IOCB0 = 1;
+                            WD_LEFT = WD_LEFT;
+                            RBIF = 0;
+                            RBIE = 1;
+                        }
+                    } else {
+                        TMR0 = WD_10us;
+                        WD_LEFT = 1;
+                        T0IF = 0;
+                        T0IE = 1;
+                        WD_probe_sent = 1;
+                    }
+                    break;
+                case Left_In:
+                    TRISB0 = 1;
+                    if (WD_feedback_received) {
+                        IOCB = 0;
+                        RBIE = 0;
+                        if (last_FE_time - last_RE_time > WD_Collision_Threshold) {
+                            TDP_evade_left();
+                        }
+                        WD_state = Center_Out;
+                    }
+                    break;
+                case Center_Out:
+                    TRISB1 = 0;
+                    if (WD_probe_sent) {
+                        if (WD_probe_finished) {
+                            WD_CENTER = 0;
+                            T0IE = 0;
+                            WD_state = Center_In;
+                            IOCB1 = 1;
+                            WD_CENTER = WD_CENTER;
+                            RBIF = 0;
+                            RBIE = 1;
+                        }
+                    } else {
+                        TMR0 = WD_10us;
+                        WD_CENTER = 1;
+                        T0IF = 0;
+                        T0IE = 1;
+                        WD_probe_sent = 1;
+                    }
+                    break;
+                case Center_In:
+                    TRISB1 = 1;
+                    if (WD_feedback_received) {
+                        IOCB = 0;
+                        RBIE = 0;
+                        if (last_FE_time - last_RE_time > WD_Collision_Threshold) {
+                            TDP_evade_center();
+                        }
+                        WD_state = Right_Out;
+                    }
+                    break;
+                case Right_Out:
+                    TRISB2 = 0;
+                    if (WD_probe_sent) {
+                        if (WD_probe_finished) {
+                            WD_RIGHT = 0;
+                            T0IE = 0;
+                            WD_state = Right_In;
+                            IOCB2 = 1;
+                            WD_RIGHT = WD_RIGHT;
+                            RBIF = 0;
+                            RBIE = 1;
+                        }
+                    } else {
+                        TMR0 = WD_10us;
+                        WD_RIGHT = 1;
+                        T0IF = 0;
+                        T0IE = 1;
+                        WD_probe_sent = 1;
+                    }
+                    break;
+                case Right_In:
+                    TRISB2 = 1;
+                    if (WD_feedback_received) {
+                        IOCB = 0;
+                        RBIE = 0;
+                        if (last_FE_time - last_RE_time > WD_Collision_Threshold) {
+                            TDP_evade_right();
+                        }
+                        WD_state = Left_Out;
+                    }
+                    break;
+            }
+            
             if (TDP_CENTER) {
                 system_state = SYSTEM_ENGAGED;
                 MC_OUT = Go_Forward;
                 TDP_state = TDP_Standby;
+                TDP_counter = 0;
             } else {
                 system_state = SYSTEM_SEARCHING;
                 if (TDP_LEFT) {
@@ -210,6 +341,13 @@ void main(void) {
                             break;
                         case RIGHT180:
                             MC_OUT = Turn_Right;
+                            if (CCP2IE == 0) {
+                                CCPR2 = CCPR2 + TWOFIFTY_MS;
+                                CCP2IE = 1;
+                            }
+                            break;
+                        case TDP_Engaged:
+                            MC_OUT = Go_Forward;
                             if (CCP2IE == 0) {
                                 CCPR2 = CCPR2 + TWOFIFTY_MS;
                                 CCP2IE = 1;
@@ -268,7 +406,45 @@ void main(void) {
     }
 }
 
+void TDP_evade_left() {
+    CCPR2 = CCPR2 + TWOFIFTY_MS;
+    TDP_saved_state = TDP_state;
+    TDP_state = TDP_Evade_Left1;
+    TDP_evade_counter = 0;
+    if (CCP2IE == 0) {
+        CCP2IE = 1;
+    }
+    MC_OUT = Turn_Right;
+}
+
+void TDP_evade_center() {
+    CCPR2 = CCPR2 + TWOFIFTY_MS;
+    TDP_saved_state = TDP_state;
+    TDP_state = TDP_Evade_Center1;
+    TDP_evade_counter = 0;
+    if (CCP2IE == 0) {
+        CCP2IE = 1;
+    }
+    MC_OUT = Turn_Left;
+}
+
+void TDP_evade_right() {
+    CCPR2 = CCPR2 + TWOFIFTY_MS;
+    TDP_saved_state = TDP_state;
+    TDP_state = TDP_Evade_Right1;
+    TDP_evade_counter = 0;
+    if (CCP2IE == 0) {
+        CCP2IE = 1;
+    }
+    MC_OUT = Turn_Left;
+}
+
 void interrupt interrupt_handler() {
+    if (T0IF) {
+        WD_probe_finished = 1;
+        T0IF = 0;
+    }
+    
     if (CCP1IF) {
         CCPR1 = CCPR1 + PWM_INCREMENT;
         if (PWM_counter < high_pulse) {
@@ -357,12 +533,79 @@ void interrupt interrupt_handler() {
                     TDP_counter++;
                 }
                 break;
+            case TDP_Engaged:
+                 if (TDP_counter == ENGAGED_DELAY) {
+                    TDP_state = TDP_Standby;
+                    TDP_counter = 0;
+                    CCP2IE = 0;
+                } else {
+                    TDP_counter++;
+                }
+                break;
+            case TDP_Evade_Left1:
+                if (TDP_evade_counter == FORTYFIVE_DEG_COUNT) {
+                    TDP_state = TDP_Evade_Left2;
+                    TDP_evade_counter = 0;
+                    MC_OUT = Go_Forward;
+                } else {
+                    TDP_evade_counter++;
+                }
+                CCPR2 = CCPR2 + TWOFIFTY_MS;
+                break;
+            case TDP_Evade_Left2:
+                if (TDP_evade_counter == FORTYFIVE_DEG_COUNT) {
+                    TDP_state = TDP_saved_state;
+                    TDP_evade_counter = 0;
+                } else {
+                    TDP_evade_counter++;
+                }
+                CCPR2 = CCPR2 + TWOFIFTY_MS;
+                break;
+            case TDP_Evade_Center1:
+                if (TDP_evade_counter == NINTY_DEG_COUNT) {
+                    TDP_state = TDP_Evade_Center2;
+                    TDP_evade_counter = 0;
+                    MC_OUT = Go_Forward;
+                } else {
+                    TDP_evade_counter++;
+                }
+                CCPR2 = CCPR2 + TWOFIFTY_MS;
+                break;
+            case TDP_Evade_Center2:
+                if (TDP_evade_counter == FORTYFIVE_DEG_COUNT) {
+                    TDP_state = TDP_saved_state;
+                    TDP_evade_counter = 0;
+                } else {
+                    TDP_evade_counter++;
+                }
+                CCPR2 = CCPR2 + TWOFIFTY_MS;
+                break;
+            case TDP_Evade_Right1:
+                if (TDP_evade_counter == FORTYFIVE_DEG_COUNT) {
+                    TDP_state = TDP_Evade_Right2;
+                    TDP_evade_counter = 0;
+                    MC_OUT = Go_Forward;
+                } else {
+                    TDP_evade_counter++;
+                }
+                CCPR2 = CCPR2 + TWOFIFTY_MS;
+                break;
+            case TDP_Evade_Right2:
+                if (TDP_evade_counter == FORTYFIVE_DEG_COUNT) {
+                    TDP_state = TDP_saved_state;
+                    TDP_evade_counter = 0;
+                } else {
+                    TDP_evade_counter++;
+                }
+                CCPR2 = CCPR2 + TWOFIFTY_MS;
+                break;
         }
         CCP2IF = 0;
     }
     
     if (RBIF) {
-        last_WD_time = TMR1;
+        last_RE_time = last_FE_time;
+        last_FE_time = TMR1;
         WD_last_left = WD_LEFT;
         WD_last_center = WD_CENTER;
         WD_last_right = WD_RIGHT;
